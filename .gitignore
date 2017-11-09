@@ -1,2 +1,5 @@
 json/
 .venv/
+decklist.txt
+imageCache/
+*.swp
