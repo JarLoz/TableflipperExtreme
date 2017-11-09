@@ -26,22 +26,22 @@ def main():
 def generateProcessedCardEntry(cardName):
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
     if cardName == 'Forest':
-        return {'name':'Forest','set':'GURU','number':'1'}
+        return {'name':'Forest','set':'PGRU','number':'1'}
     elif cardName == 'Island':
-        return {'name':'Island','set':'GURU','number':'2'}
+        return {'name':'Island','set':'PGRU','number':'2'}
     elif cardName == 'Mountain':
-        return {'name':'Mountain','set':'GURU','number':'3'}
+        return {'name':'Mountain','set':'PGRU','number':'3'}
     elif cardName == 'Plains':
-        return {'name':'Plains','set':'GURU','number':'4'}
+        return {'name':'Plains','set':'PGRU','number':'4'}
     elif cardName == 'Swamp':
-        return {'name':'Mountain','set':'GURU','number':'5'}
+        return {'name':'Mountain','set':'PGRU','number':'5'}
 
     for setName in setNames:
         # Some sets just suck. Including promos.
         if setName in badSets or setName[0] == 'p':
             continue
         for cardInfo in allCards[setName]['cards']:
-            if cardName == cardInfo['name']:
+            if cardName.lower() == cardInfo['name'].lower():
                 if 'mciNumber' in cardInfo.keys():
                     return {'name':cardName, 'set':setName, 'number':cardInfo['mciNumber']}
                 elif 'number' in cardInfo.keys():
