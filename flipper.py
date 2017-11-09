@@ -11,17 +11,28 @@ setNames = list(map(lambda s: s['code'], setOrdered))
 badSets = []
 
 def main():
-    decklist = open('decklist.txt').readlines()
+    with open('decklist.txt') as decklistfile:
+        decklist = decklistfile.readlines()
     processedDecklist = []
+    print('Processing Decklist')
     for line in decklist:
         splitLine = line.strip().split()
         if len(splitLine) <= 1:
+            print('Skipping empty line')
             continue
-        count = splitLine[0]
+        count = int(splitLine[0])
         cardName = ' '.join(splitLine[1:])
         processedCard = generateProcessedCardEntry(cardName);
         if processedCard != None:
+            print('Found card ' + processedCard['name'])
             downloadCardImage(processedCard)
+            for i in range(count):
+                processedDecklist.append(processedCard)
+        else:
+            print("Couldn't find card, line: " +  line)
+    print('Decklist processed')
+
+    #TODO Generate TabletopSimulator deck JSON, generate deck image(s)
 
 def generateProcessedCardEntry(cardName):
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
@@ -50,16 +61,20 @@ def generateProcessedCardEntry(cardName):
 
 def downloadCardImage(processedCard):
     os.makedirs('imageCache', exist_ok=True)
-    imageName = 'imageCache/' + processedCard['set'] + '_' + processedCard['number'] + '.jpg'
+    imageName = generateCardImageName(processedCard)
     if os.path.isfile(imageName):
-        #No need to download images twice.
+        # No need to download images twice. Shrewd dudes can make cool MS PAINT alters like this wooo
+        print('Image found for ' + processedCard['name'])
         return;
-    print('Downloading card image' + processedCard['name'] + ' to ' + imageName)
+    print('Downloading card ' + processedCard['name'] + ' image to ' + imageName)
     imageUrl = 'https://img.scryfall.com/cards/large/en/' + processedCard['set'].lower() + '/' + processedCard['number'] + '.jpg'
     response = requests.get(imageUrl, stream=True)
     with open(imageName, "wb") as out_file:
         shutil.copyfileobj(response.raw, out_file)
     del response
+
+def generateCardImageName(processedCard):
+    return 'imageCache/' + processedCard['set'] + '_' + processedCard['number'] + '.jpg'
 
 if __name__ == '__main__':
     sys.exit(main())
