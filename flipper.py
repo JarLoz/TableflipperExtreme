@@ -32,9 +32,9 @@ def main():
         else:
             print("Couldn't find card, line: " +  line)
     print('Creating deck images')
-    createDeckImages(processedDecklist)
+    deckImageNames = createDeckImages(processedDecklist)
     print('Creating TTS JSON')
-    ttsJson = createTTSJSON(processedDecklist)
+    ttsJson = createTTSJSON(processedDecklist, deckImageNames)
     with open('output.json', 'w') as outfile:
         json.dump(ttsJson, outfile)
     print('All done')
@@ -85,30 +85,36 @@ def generateCardImageName(processedCard):
 
 def createDeckImages(processedDecklist):
     imageIndex = 0
+    deckImageNames = []
     for i in range(0,len(processedDecklist),69) :
         chunk = processedDecklist[i:i+69]
         imageNames = list(map(lambda card: generateCardImageName(card), chunk))
         deckImageName = "deckimage-"+str(imageIndex)+".jpg"
+        deckImageNames.append(deckImageName)
         subprocess.call(['montage'] + imageNames + ['-geometry', '+0+0', '-tile', '10x7', deckImageName])
         imageIndex += 1
+    return deckImageNames
 
-def createTTSJSON(processedDecklist):
+def createTTSJSON(processedDecklist, deckImageNames):
     ttsJson = {'ObjectStates':[]}
-    deckObject = {'Transform': {'posX':-0.0,'posY':'1.0','posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1},'Name': 'DeckCustom'}
+    deckObject = {'Transform': {'posX':-0.0,'posY':'1.0','posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1},'Name': 'DeckCustom','Nickname':'COOLDECK'}
     containedObjects = []
     deckIds = []
     cardId = 100
     for card in processedDecklist:
         cardObject = {'Name':'Card','Nickname':card['name'],'CardID':cardId}
+        cardObject['Transform'] = {'posX':2.5,'posY':2.5,'posZ':3.5,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1}
         containedObjects.append(cardObject)
         deckIds.append(cardId)
         cardId += 1
+        if cardId == 169:
+            cardId = 200
     deckObject['ContainedObjects'] = containedObjects
     deckObject['DeckIDs'] = deckIds
     #TODO calculate dis shit
     deckObject['CustomDeck'] = {
-            "1":{'NumWidth':10,'NumHeight':7,'FaceUrl':'ADDFACEURLHERE','BackUrl':'http://i.imgur.com/P7qYTcI.png'},
-            "2":{'NumWidth':10,'NumHeight':4,'FaceUrl':'ADDFACEURLHERE','BackUrl':'http://i.imgur.com/P7qYTcI.png'}}
+            "1":{'NumWidth':10,'NumHeight':7,'FaceUrl':'file:///home/jarloz/Coolstuff/TableflipperExtreme/deckimage-0.jpg','BackUrl':'http://i.imgur.com/P7qYTcI.png'},
+            "2":{'NumWidth':10,'NumHeight':4,'FaceUrl':'file:///home/jarloz/Coolstuff/TableflipperExtreme/deckimage-1.jpg','BackUrl':'http://i.imgur.com/P7qYTcI.png'}}
     ttsJson['ObjectStates'].append(deckObject)
 
     return ttsJson
