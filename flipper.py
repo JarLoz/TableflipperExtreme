@@ -5,12 +5,19 @@ import argparse
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-f','--file', help='Filename of the decklist, in tappedout.net txt format')
+    group = parser.add_mutually_exclusive_group()
+    group.add_argument('-f','--file', help='Filename of the decklist, in tappedout.net txt format')
+    group.add_argument('-u','--url', help='URL to tappedout.net decklist')
+    group.add_argument('-j','--json', help='JSON file containing processed card list. Good for tokens.')
     parser.add_argument('-n','--name', help='Name of the deck')
     args = parser.parse_args()
 
+    if (args.file == None and args.url == None and args.json == None):
+        print('Need some input. Exiting.')
+        return
+
     if (args.file == None):
-        print('--file argument required')
+        print('Other input not yet supported LOL')
         return
 
     with open(args.file,encoding="utf8") as decklistfile:

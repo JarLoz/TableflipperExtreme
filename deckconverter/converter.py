@@ -77,7 +77,7 @@ def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
 
     for setName in setNames:
         # Some sets just suck. Including promos. Also this hack sucks.
-        if setName in badSets or setName[0] == 'p':
+        if setName in badSets or (setName[0] == 'p' and len(setName) == 4):
             continue
         for cardInfo in allCards[setName]['cards']:
             if cardName.lower() == cardInfo['name'].lower():
