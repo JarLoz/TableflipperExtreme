@@ -29,7 +29,7 @@ def main():
     print('Creating TTS JSON')
     ttsJson = converter.createTTSJSON(processedDecklist, deckName, deckImageNames)
     with open(deckName+'.json', 'w',encoding='utf8') as outfile:
-        json.dump(ttsJson, outfile)
+        json.dump(ttsJson, outfile, indent=2)
     print('All done')
 
 if __name__ == '__main__':
