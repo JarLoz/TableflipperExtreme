@@ -1,7 +1,7 @@
 # TableflipperExtreme
-This is TableflipperExtreme, an MTG deck creator for Tabletop Simulator. It will eventually eat Decklists from tappedout and output files that Tabletop simulator accepts.
+This is TableflipperExtreme, a MTG deck creator for Tabletop Simulator. It will eventually eat Decklists from tappedout and output files that Tabletop simulator accepts.
 
-I do all this because frogtown.me has usability issues.
+This project was started because using online converters such as frogtown.me are a pain in the ass.
 
 ## Getting started
 
@@ -21,4 +21,7 @@ Once this is done, you can drop the .json file to your Tabletop Simulator Saved 
 
 Happy topdecking, scrublords.
 
--JarLoz
+## Data sources
+
+This application pulls card data from [MTGJSON](http://mtgjson.com/) and image data from [Scryfall](https://scryfall.com/).
+
