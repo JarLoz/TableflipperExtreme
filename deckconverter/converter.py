@@ -5,13 +5,53 @@ import shutil
 import os
 import subprocess
 
-allCards = json.load(open('json/AllSets.json'))
-setList = json.load(open('json/SetList.json'))
-setOrdered = sorted(setList, key=lambda s: s['releaseDate'])
-setNames = list(map(lambda s: s['code'], setOrdered))
-badSets = []
+def processDecklist(decklist):
+    # Ensure we have the source data available.
+    os.makedirs('json', exist_ok=True)
+    if os.path.isfile('json/SetList.json') == False:
+        print('SetList.json missing, downloading')
+        response = requests.get('https://mtgjson.com/json/SetList.json')
+        with open('json/SetList.json', 'w', encoding='utf8') as outFile:
+            outFile.write(response.text)
+        del response
+    else:
+        print('SetList.json found')
 
-def generateProcessedCardEntry(cardName):
+    if os.path.isfile('json/AllSets.json') == False:
+        print('AllSets.json missing, downloading')
+        response = requests.get('https://mtgjson.com/json/AllSets.json')
+        with open('json/AllSets.json', 'w', encoding='utf8') as outFile:
+            outFile.write(response.text)
+        del response
+    else:
+        print('AllSets.json found')
+
+    with open('json/AllSets.json', encoding="utf8") as inFile:
+        allCards = json.load(inFile)
+    with open('json/SetList.json', encoding="utf8") as inFile:
+        setList = json.load(inFile)
+    # Sort sets based on release date, this way we'll get the oldest sets first!
+    setOrdered = sorted(setList, key=lambda s: s['releaseDate'])
+    setNames = list(map(lambda s: s['code'], setOrdered))
+
+    processedDecklist = []
+    for line in decklist:
+        splitLine = line.strip().split()
+        if len(splitLine) <= 1:
+            print('Skipping empty line')
+            continue
+        count = int(splitLine[0])
+        cardName = ' '.join(splitLine[1:])
+        processedCard = generateProcessedCardEntry(cardName, setNames, allCards);
+        if processedCard != None:
+            print('Found card ' + processedCard['name'])
+            for i in range(count):
+                processedDecklist.append(processedCard)
+        else:
+            print("Couldn't find card, line: " +  line)
+    return processedDecklist
+
+def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
     if cardName == 'Forest':
         return {'name':'Forest','set':'PGRU','number':'1'}
@@ -25,7 +65,7 @@ def generateProcessedCardEntry(cardName):
         return {'name':'Mountain','set':'PGRU','number':'5'}
 
     for setName in setNames:
-        # Some sets just suck. Including promos.
+        # Some sets just suck. Including promos. Also this hack sucks.
         if setName in badSets or setName[0] == 'p':
             continue
         for cardInfo in allCards[setName]['cards']:
@@ -37,6 +77,10 @@ def generateProcessedCardEntry(cardName):
                 else:
                     return None
     return None
+
+def downloadCardImages(processedDecklist):
+    for processedCard in processedDecklist:
+        downloadCardImage(processedCard)
 
 def downloadCardImage(processedCard):
     os.makedirs('imageCache', exist_ok=True)

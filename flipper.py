@@ -4,25 +4,12 @@ from deckconverter import converter
 import argparse
 
 def main():
-    with open('decklist.txt') as decklistfile:
+    with open('decklist.txt',encoding="utf8") as decklistfile:
         decklist = decklistfile.readlines()
-    processedDecklist = []
     print('Processing Decklist')
-    for line in decklist:
-        splitLine = line.strip().split()
-        if len(splitLine) <= 1:
-            print('Skipping empty line')
-            continue
-        count = int(splitLine[0])
-        cardName = ' '.join(splitLine[1:])
-        processedCard = converter.generateProcessedCardEntry(cardName);
-        if processedCard != None:
-            print('Found card ' + processedCard['name'])
-            converter.downloadCardImage(processedCard)
-            for i in range(count):
-                processedDecklist.append(processedCard)
-        else:
-            print("Couldn't find card, line: " +  line)
+    processedDecklist = converter.processDecklist(decklist)
+    print('Downloading card images')
+    converter.downloadCardImages(processedDecklist)
     print('Creating deck images')
     deckImageNames = converter.createDeckImages(processedDecklist)
     print('Creating TTS JSON')
