@@ -25,3 +25,6 @@ Happy topdecking, scrublords.
 
 This application pulls card data from [MTGJSON](http://mtgjson.com/) and image data from [Scryfall](https://scryfall.com/).
 
+## Theme song
+
+[Official Theme Song Of Tableflipper Extreme](https://www.youtube.com/watch?v=kQpaT9rhiog)
