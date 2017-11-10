@@ -21,16 +21,22 @@ def main():
         deckName = args.name
 
     print('Processing Decklist')
-    processedDecklist = converter.processDecklist(decklist)
+    processedDecklist,processedExtraCards = converter.processDecklist(decklist)
     print('Downloading card images')
     converter.downloadCardImages(processedDecklist)
+    converter.downloadCardImages(processedExtraCards)
     print('Creating deck images')
     deckImageNames = converter.createDeckImages(processedDecklist, deckName)
+    extraImageNames = converter.createDeckImages(processedExtraCards, deckName+'-extra')
     print('Creating TTS JSON')
-    ttsJson = converter.createTTSJSON(processedDecklist, deckName, deckImageNames)
+    baseDeckObject = converter.createDeckObject(processedDecklist, deckName, deckImageNames, -0.0)
+    extraDeckObject = converter.createDeckObject(processedExtraCards, deckName+'-extra', extraImageNames, 4.0)
+    ttsJson = {'ObjectStates':[baseDeckObject,extraDeckObject]}
     with open(deckName+'.json', 'w',encoding='utf8') as outfile:
         json.dump(ttsJson, outfile, indent=2)
     print('All done')
 
 if __name__ == '__main__':
     sys.exit(main())
+
+

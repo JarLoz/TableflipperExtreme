@@ -35,6 +35,8 @@ def processDecklist(decklist):
     setNames = list(map(lambda s: s['code'], setOrdered))
 
     processedDecklist = []
+    extraCardNames = []
+    processedExtraCards = []
     for line in decklist:
         splitLine = line.strip().split()
         if len(splitLine) <= 1:
@@ -42,14 +44,23 @@ def processDecklist(decklist):
             continue
         count = int(splitLine[0])
         cardName = ' '.join(splitLine[1:])
-        processedCard = generateProcessedCardEntry(cardName, setNames, allCards);
+        # Corner case handling for split cards.
+        splitIndex = cardName.find('/')
+        if (splitIndex >= 0):
+            cardName = cardName[:index].strip()
+        processedCard, extra = generateProcessedCardEntry(cardName, setNames, allCards);
         if processedCard != None:
             print('Found card ' + processedCard['name'])
             for i in range(count):
                 processedDecklist.append(processedCard)
+            extraCardNames += extra
         else:
             print("Couldn't find card, line: " +  line)
-    return processedDecklist
+
+    for extraCardName in set(extraCardNames):
+        processedExtraCard, useless = generateProcessedCardEntry(extraCardName, setNames, allCards)
+        processedExtraCards.append(processedExtraCard)
+    return (processedDecklist, processedExtraCards)
 
 def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
@@ -70,13 +81,38 @@ def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
             continue
         for cardInfo in allCards[setName]['cards']:
             if cardName.lower() == cardInfo['name'].lower():
+
+                number = ''
                 if 'number' in cardInfo.keys():
-                    return {'name':cardName, 'set':setName, 'number':cardInfo['number']}
+                    number = cardInfo['number']
                 elif 'mciNumber' in cardInfo.keys():
-                    return {'name':cardName, 'set':setName, 'number':cardInfo['mciNumber']}
+                    number = cardInfo['mciNumber']
                 else:
-                    return None
-    return None
+                    return (None,None)
+                # Slight mismatch between mtgjson and scryfall.
+                if cardName == 'Hanweir Battlements':
+                    number = '204a'
+                if cardName == 'Chittering Host':
+                    number = '96b'
+
+                # Extra cards are flipsides of double-faced and meld cards.
+                extraNames = []
+                if cardInfo['layout'] == 'double-faced':
+                    for extraCard in cardInfo['names']:
+                        if extraCard != cardName:
+                            extraNames.append(extraCard)
+                elif cardInfo['layout'] == 'meld':
+                    # Goddamn meld cards. Let's just hardcode them, there's six of them.
+                    if cardName == 'Bruna, the Fading Light' or cardName == 'Gisela, the Broken Blade':
+                        extraNames.append('Brisela, Voice of Nightmares')
+                    elif cardName == 'Graf Rats' or cardName == 'Midnight Scavengers':
+                        extraNames.append('Chittering Host')
+                    elif cardName == 'Hanweir Garrison' or cardName == 'Hanweir Battlements':
+                        extraNames.append('Hanweir, the Writhing Township')
+
+                cardEntry = {'name':cardName, 'set':setName, 'number':number}
+                return (cardEntry,extraNames)
+    return (None,None)
 
 def downloadCardImages(processedDecklist):
     for processedCard in processedDecklist:
@@ -111,9 +147,8 @@ def createDeckImages(processedDecklist, deckName):
         imageIndex += 1
     return deckImageNames
 
-def createTTSJSON(processedDecklist, deckName, deckImageNames):
-    ttsJson = {'ObjectStates':[]}
-    deckObject = {'Transform': {'posX':-0.0,'posY':'1.0','posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1},'Name': 'DeckCustom','Nickname':deckName}
+def createDeckObject(processedDecklist, deckName, deckImageNames, posX):
+    deckObject = {'Transform': {'posX':posX,'posY':1.0,'posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1},'Name': 'DeckCustom','Nickname':deckName}
     containedObjects = []
     deckIds = []
     cardId = 100
@@ -133,6 +168,4 @@ def createTTSJSON(processedDecklist, deckName, deckImageNames):
         customDeck[str(customDeckIndex)] = {'NumWidth':10,'NumHeight':7,'FaceUrl':'<REPLACE WITH URL TO '+deckImageName+'>','BackUrl':'http://i.imgur.com/P7qYTcI.png'}
         customDeckIndex += 1
     deckObject['CustomDeck'] = customDeck
-    ttsJson['ObjectStates'].append(deckObject)
-
-    return ttsJson
+    return deckObject
