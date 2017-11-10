@@ -91,7 +91,7 @@ def createDeckImages(processedDecklist):
         imageNames = list(map(lambda card: generateCardImageName(card), chunk))
         deckImageName = "deckimage-"+str(imageIndex)+".jpg"
         deckImageNames.append(deckImageName)
-        subprocess.call(['montage'] + imageNames + ['-geometry', '+0+0', '-tile', '10x7', deckImageName])
+        subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', deckImageName])
         imageIndex += 1
     return deckImageNames
 
@@ -114,7 +114,7 @@ def createTTSJSON(processedDecklist, deckImageNames):
     #TODO calculate dis shit
     deckObject['CustomDeck'] = {
             "1":{'NumWidth':10,'NumHeight':7,'FaceUrl':'file:///home/jarloz/Coolstuff/TableflipperExtreme/deckimage-0.jpg','BackUrl':'http://i.imgur.com/P7qYTcI.png'},
-            "2":{'NumWidth':10,'NumHeight':4,'FaceUrl':'file:///home/jarloz/Coolstuff/TableflipperExtreme/deckimage-1.jpg','BackUrl':'http://i.imgur.com/P7qYTcI.png'}}
+            "2":{'NumWidth':10,'NumHeight':7,'FaceUrl':'file:///home/jarloz/Coolstuff/TableflipperExtreme/deckimage-1.jpg','BackUrl':'http://i.imgur.com/P7qYTcI.png'}}
     ttsJson['ObjectStates'].append(deckObject)
 
     return ttsJson
