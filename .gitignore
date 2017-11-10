@@ -3,3 +3,4 @@ json/
 decklist.txt
 imageCache/
 *.swp
+__pycache__/
