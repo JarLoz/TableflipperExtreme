@@ -99,21 +99,21 @@ def downloadCardImage(processedCard):
 def generateCardImageName(processedCard):
     return 'imageCache/' + processedCard['set'] + '_' + processedCard['number'] + '.jpg'
 
-def createDeckImages(processedDecklist):
+def createDeckImages(processedDecklist, deckName):
     imageIndex = 0
     deckImageNames = []
     for i in range(0,len(processedDecklist),69) :
         chunk = processedDecklist[i:i+69]
         imageNames = list(map(lambda card: generateCardImageName(card), chunk))
-        deckImageName = "deckimage-"+str(imageIndex)+".jpg"
+        deckImageName = deckName+'_image_'+str(imageIndex)+".jpg"
         deckImageNames.append(deckImageName)
         subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', deckImageName])
         imageIndex += 1
     return deckImageNames
 
-def createTTSJSON(processedDecklist, deckImageNames):
+def createTTSJSON(processedDecklist, deckName, deckImageNames):
     ttsJson = {'ObjectStates':[]}
-    deckObject = {'Transform': {'posX':-0.0,'posY':'1.0','posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1},'Name': 'DeckCustom','Nickname':'COOLDECK'}
+    deckObject = {'Transform': {'posX':-0.0,'posY':'1.0','posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1},'Name': 'DeckCustom','Nickname':deckName}
     containedObjects = []
     deckIds = []
     cardId = 100
@@ -127,10 +127,12 @@ def createTTSJSON(processedDecklist, deckImageNames):
             cardId = 200
     deckObject['ContainedObjects'] = containedObjects
     deckObject['DeckIDs'] = deckIds
-    #TODO calculate dis shit
-    deckObject['CustomDeck'] = {
-            "1":{'NumWidth':10,'NumHeight':7,'FaceUrl':'file:///home/jarloz/Coolstuff/TableflipperExtreme/deckimage-0.jpg','BackUrl':'http://i.imgur.com/P7qYTcI.png'},
-            "2":{'NumWidth':10,'NumHeight':7,'FaceUrl':'file:///home/jarloz/Coolstuff/TableflipperExtreme/deckimage-1.jpg','BackUrl':'http://i.imgur.com/P7qYTcI.png'}}
+    customDeck = {}
+    customDeckIndex = 1
+    for deckImageName in deckImageNames:
+        customDeck[str(customDeckIndex)] = {'NumWidth':10,'NumHeight':7,'FaceUrl':'<REPLACE WITH URL TO '+deckImageName+'>','BackUrl':'http://i.imgur.com/P7qYTcI.png'}
+        customDeckIndex += 1
+    deckObject['CustomDeck'] = customDeck
     ttsJson['ObjectStates'].append(deckObject)
 
     return ttsJson
