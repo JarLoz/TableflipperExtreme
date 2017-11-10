@@ -6,6 +6,46 @@ import os
 import subprocess
 
 def processDecklist(decklist):
+    allCards, setList = downloadSourceData()
+    # Sort sets based on release date, this way we'll get the oldest sets first!
+    setOrdered = sorted(setList, key=lambda s: s['releaseDate'])
+    setNames = list(map(lambda s: s['code'], setOrdered))
+
+    processedDecklist = []
+    extraCardNames = []
+    processedExtraCards = []
+    for line in decklist:
+        cardName, count = parseDecklistLine(line)
+        if cardName == None:
+            print('Skipping empty line')
+            continue
+        processedCard, extra = generateProcessedCardEntry(cardName, setNames, allCards);
+        if processedCard != None:
+            print('Found card ' + processedCard['name'])
+            for i in range(count):
+                processedDecklist.append(processedCard)
+            extraCardNames += extra
+        else:
+            print("Couldn't find card, line: " +  line)
+
+    for extraCardName in set(extraCardNames):
+        processedExtraCard, useless = generateProcessedCardEntry(extraCardName, setNames, allCards)
+        processedExtraCards.append(processedExtraCard)
+    return (processedDecklist, processedExtraCards)
+
+def parseDecklistLine(line):
+    splitLine = line.strip().split()
+    if len(splitLine) <= 1:
+        return (None, None)
+    count = int(splitLine[0])
+    cardName = ' '.join(splitLine[1:])
+    # Corner case handling for split cards.
+    splitIndex = cardName.find('/')
+    if (splitIndex >= 0):
+        cardName = cardName[:index].strip()
+    return (cardName, count)
+
+def downloadSourceData():
     # Ensure we have the source data available.
     os.makedirs('json', exist_ok=True)
     if os.path.isfile('json/SetList.json') == False:
@@ -25,55 +65,25 @@ def processDecklist(decklist):
         del response
     else:
         print('AllSets.json found')
-
     with open('json/AllSets.json', encoding="utf8") as inFile:
         allCards = json.load(inFile)
     with open('json/SetList.json', encoding="utf8") as inFile:
         setList = json.load(inFile)
-    # Sort sets based on release date, this way we'll get the oldest sets first!
-    setOrdered = sorted(setList, key=lambda s: s['releaseDate'])
-    setNames = list(map(lambda s: s['code'], setOrdered))
+    return (allCards, setList)
 
-    processedDecklist = []
-    extraCardNames = []
-    processedExtraCards = []
-    for line in decklist:
-        splitLine = line.strip().split()
-        if len(splitLine) <= 1:
-            print('Skipping empty line')
-            continue
-        count = int(splitLine[0])
-        cardName = ' '.join(splitLine[1:])
-        # Corner case handling for split cards.
-        splitIndex = cardName.find('/')
-        if (splitIndex >= 0):
-            cardName = cardName[:index].strip()
-        processedCard, extra = generateProcessedCardEntry(cardName, setNames, allCards);
-        if processedCard != None:
-            print('Found card ' + processedCard['name'])
-            for i in range(count):
-                processedDecklist.append(processedCard)
-            extraCardNames += extra
-        else:
-            print("Couldn't find card, line: " +  line)
-
-    for extraCardName in set(extraCardNames):
-        processedExtraCard, useless = generateProcessedCardEntry(extraCardName, setNames, allCards)
-        processedExtraCards.append(processedExtraCard)
-    return (processedDecklist, processedExtraCards)
 
 def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
     if cardName == 'Forest':
-        return {'name':'Forest','set':'PGRU','number':'1'}
+        return ({'name':'Forest','set':'PGRU','number':'1'},[])
     elif cardName == 'Island':
-        return {'name':'Island','set':'PGRU','number':'2'}
+        return ({'name':'Island','set':'PGRU','number':'2'},[])
     elif cardName == 'Mountain':
-        return {'name':'Mountain','set':'PGRU','number':'3'}
+        return ({'name':'Mountain','set':'PGRU','number':'3'},[])
     elif cardName == 'Plains':
-        return {'name':'Plains','set':'PGRU','number':'4'}
+        return ({'name':'Plains','set':'PGRU','number':'4'},[])
     elif cardName == 'Swamp':
-        return {'name':'Mountain','set':'PGRU','number':'5'}
+        return ({'name':'Mountain','set':'PGRU','number':'5'},[])
 
     for setName in setNames:
         # Some sets just suck. Including promos. Also this hack sucks.

@@ -2,6 +2,7 @@ import sys
 import json
 from deckconverter import converter 
 import argparse
+import requests
 
 def main():
     parser = argparse.ArgumentParser()
@@ -12,38 +13,56 @@ def main():
     parser.add_argument('-n','--name', help='Name of the deck')
     args = parser.parse_args()
 
+
     if (args.file == None and args.url == None and args.json == None):
         print('Need some input. Exiting.')
         return
-
-    if (args.file == None):
-        print('Other input not yet supported LOL')
-        return
-
-    with open(args.file,encoding="utf8") as decklistfile:
-        decklist = decklistfile.readlines()
 
     deckName = 'Deck'
     if (args.name):
         deckName = args.name
 
-    print('Processing Decklist')
-    processedDecklist,processedExtraCards = converter.processDecklist(decklist)
-    print('Downloading card images')
-    converter.downloadCardImages(processedDecklist)
-    converter.downloadCardImages(processedExtraCards)
-    print('Creating deck images')
-    deckImageNames = converter.createDeckImages(processedDecklist, deckName)
-    extraImageNames = converter.createDeckImages(processedExtraCards, deckName+'-extra')
-    print('Creating TTS JSON')
-    baseDeckObject = converter.createDeckObject(processedDecklist, deckName, deckImageNames, -0.0)
-    extraDeckObject = converter.createDeckObject(processedExtraCards, deckName+'-extra', extraImageNames, 4.0)
-    ttsJson = {'ObjectStates':[baseDeckObject,extraDeckObject]}
+    if (args.file):
+        with open(args.file,encoding="utf8") as decklistfile:
+            decklist = decklistfile.readlines()
+        ttsJson = generateJsonFromDecklist(decklist, deckName)
+    elif (args.url):
+        response = requests.get(args.url+'?fmt=txt')
+        decklist = response.text.split('\n')
+        del response
+        ttsJson = generateJsonFromDecklist(decklist, deckName)
+    elif (args.json):
+        with open(args.json, encoding="utf8") as inFile:
+            processedDecklist = json.load(inFile)
+        ttsJson = generateJsonFromProcessedDecklist(processedDecklist, deckName)
+
+
     with open(deckName+'.json', 'w',encoding='utf8') as outfile:
         json.dump(ttsJson, outfile, indent=2)
     print('All done')
 
+def generateJsonFromDecklist(decklist, deckName):
+    print('Processing decklist')
+    processedDecklist,processedExtraCards = converter.processDecklist(decklist)
+
+    deckObjects = []
+    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, 0.0))
+    if (processedExtraCards):
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', 4.0))
+
+    return {'ObjectStates':deckObjects}
+
+def generateJsonFromProcessedDecklist(processedDecklist, deckName):
+    deckObject = generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, 0.0)
+    return {'ObjectStates':[deckObject]}
+
+def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX):
+    print('Downloading card images')
+    converter.downloadCardImages(processedDecklist)
+    print('Creating deck images')
+    deckImageNames = converter.createDeckImages(processedDecklist, deckName)
+    print('Creating deck object')
+    return converter.createDeckObject(processedDecklist, deckName, deckImageNames, posX)
+
 if __name__ == '__main__':
     sys.exit(main())
-
-
