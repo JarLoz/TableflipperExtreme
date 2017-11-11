@@ -12,9 +12,15 @@ def processDecklist(decklist):
     setNames = list(map(lambda s: s['code'], setOrdered))
 
     processedDecklist = []
+    processedDecklistSideboard = []
     extraCardNames = []
-    processedExtraCards = []
+    sideboard = False
     for line in decklist:
+        # Checking if we are in sideboard territory.
+        if line.strip().lower() == 'sideboard:':
+            print('Switching to sideboard')
+            sideboard = True
+            continue;
         cardName, count = parseDecklistLine(line)
         if cardName == None:
             print('Skipping empty line')
@@ -23,15 +29,19 @@ def processDecklist(decklist):
         if processedCard != None:
             print('Found card ' + processedCard['name'])
             for i in range(count):
-                processedDecklist.append(processedCard)
+                if sideboard:
+                    processedDecklistSideboard.append(processedCard)
+                else:
+                    processedDecklist.append(processedCard)
             extraCardNames += extra
         else:
             print("Couldn't find card, line: " +  line)
 
+    processedExtraCards = []
     for extraCardName in set(extraCardNames):
         processedExtraCard, useless = generateProcessedCardEntry(extraCardName, setNames, allCards)
         processedExtraCards.append(processedExtraCard)
-    return (processedDecklist, processedExtraCards)
+    return (processedDecklist, processedDecklistSideboard, processedExtraCards)
 
 def parseDecklistLine(line):
     splitLine = line.strip().split()
@@ -100,9 +110,9 @@ def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
                 else:
                     return (None,None)
                 # Slight mismatch between mtgjson and scryfall.
-                if cardName == 'Hanweir Battlements':
+                if cardName.lower() == 'hanweir battlements':
                     number = '204a'
-                if cardName == 'Chittering Host':
+                if cardName.lower() == 'chittering host':
                     number = '96b'
 
                 # Extra cards are flipsides of double-faced and meld cards.
@@ -113,11 +123,11 @@ def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
                             extraNames.append(extraCard)
                 elif cardInfo['layout'] == 'meld':
                     # Goddamn meld cards. Let's just hardcode them, there's six of them.
-                    if cardName == 'Bruna, the Fading Light' or cardName == 'Gisela, the Broken Blade':
+                    if cardName.lower() == 'bruna, the fading light' or cardName.lower() == 'gisela, the broken blade':
                         extraNames.append('Brisela, Voice of Nightmares')
-                    elif cardName == 'Graf Rats' or cardName == 'Midnight Scavengers':
+                    elif cardName.lower() == 'graf rats' or cardName == 'midnight scavengers':
                         extraNames.append('Chittering Host')
-                    elif cardName == 'Hanweir Garrison' or cardName == 'Hanweir Battlements':
+                    elif cardName.lower() == 'hanweir garrison' or cardName == 'hanweir battlements':
                         extraNames.append('Hanweir, the Writhing Township')
 
                 cardEntry = {'name':cardName, 'set':setName, 'number':number}

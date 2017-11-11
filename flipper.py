@@ -15,7 +15,7 @@ def main():
 
 
     if (args.file == None and args.url == None and args.json == None):
-        print('Need some input. Exiting.')
+        print('Need some input, either from -f, -u, or -j. See --help.')
         return
 
     deckName = 'Deck'
@@ -23,16 +23,18 @@ def main():
         deckName = args.name
 
     if (args.file):
-        with open(args.file,encoding="utf8") as decklistfile:
+        print('Generating from file ' +  args.file)
+        with open(args.file,encoding='utf8') as decklistfile:
             decklist = decklistfile.readlines()
         ttsJson = generateJsonFromDecklist(decklist, deckName)
     elif (args.url):
+        print('Generating from URL ' + args.url)
         response = requests.get(args.url+'?fmt=txt')
         decklist = response.text.split('\n')
         del response
         ttsJson = generateJsonFromDecklist(decklist, deckName)
     elif (args.json):
-        with open(args.json, encoding="utf8") as inFile:
+        with open(args.json, encoding='utf8') as inFile:
             processedDecklist = json.load(inFile)
         ttsJson = generateJsonFromProcessedDecklist(processedDecklist, deckName)
 
@@ -43,12 +45,17 @@ def main():
 
 def generateJsonFromDecklist(decklist, deckName):
     print('Processing decklist')
-    processedDecklist,processedExtraCards = converter.processDecklist(decklist)
+    processedDecklist,processedDecklistSideboard,processedExtraCards = converter.processDecklist(decklist)
 
     deckObjects = []
-    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, 0.0))
+    posX = 0.0
+    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX))
+    posX += 4.0
+    if (processedDecklistSideboard):
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklistSideboard, deckName+'-sideboard', posX))
+        posX += 4.0
     if (processedExtraCards):
-        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', 4.0))
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX))
 
     return {'ObjectStates':deckObjects}
 
