@@ -73,7 +73,7 @@ The structure of the json file is as follows:
       {"name":"Goblin","set":"tori","number":"6"}
     ]
     
-The file contains an array of objects, and each object has three members: name, set and number. The name is only used to nickname the card object in Tabletop Simulator. The set specifies the MTG set code name, and the number the card number used. The example JSON will result in a deck containing the following tokens: [BW Spirit](https://scryfall.com/card/tc15/22), [U Spirit](https://scryfall.com/card/tavr/4) and [Goblin](https://scryfall.com/card/tori/6).
+The file contains an array of objects, and each object has three members: name, set and number. `name` is only used to nickname the card object in Tabletop Simulator. `set` specifies the MTG set code name, and `number` is the card's set number. The example JSON will result in a deck containing the following tokens: [BW Spirit](https://scryfall.com/card/tc15/22), [U Spirit](https://scryfall.com/card/tavr/4) and [Goblin](https://scryfall.com/card/tori/6).
 
 ## Getting the results into Tabletop Simulator
 
