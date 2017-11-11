@@ -155,7 +155,7 @@ def downloadCardImage(processedCard):
 def generateCardImageName(processedCard):
     return 'imageCache/' + processedCard['set'] + '_' + processedCard['number'] + '.jpg'
 
-def createDeckImages(processedDecklist, deckName):
+def createDeckImages(processedDecklist, deckName, hires):
     imageIndex = 0
     deckImageNames = []
     for i in range(0,len(processedDecklist),69) :
@@ -163,7 +163,10 @@ def createDeckImages(processedDecklist, deckName):
         imageNames = list(map(lambda card: generateCardImageName(card), chunk))
         deckImageName = deckName+'_image_'+str(imageIndex)+".jpg"
         deckImageNames.append(deckImageName)
-        subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', deckImageName])
+        if (hires):
+            subprocess.call(['montage'] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', deckImageName])
+        else:
+            subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', deckImageName])
         imageIndex += 1
     return deckImageNames
 
