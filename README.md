@@ -1,7 +1,9 @@
 # TableflipperExtreme
-This is TableflipperExtreme, a MTG deck creator for Tabletop Simulator. It will eventually eat Decklists from tappedout and output files that Tabletop simulator accepts.
+This is TableflipperExtreme, a MTG deck creator for Tabletop Simulator. It will eats decklists from files or from Tappedout.net, and outputs files you can import to Tabletop Simulator.
 
-This project was started because using online converters such as frogtown.me are a pain in the ass.
+The application will always use the oldest possible printing of a card, disregarding promo printings, with the exception of basic lands, which are always Guru lands. This is due to my personal preferences, and is not negotiable. If you really want ugly Kaladesh Invocations in your decks, see the section about importing JSON files below.
+
+This project was started because using online converters such as frogtown.me are a pain in the ass. This one is too, but not to me.
 
 ## Getting started
 
@@ -49,7 +51,7 @@ The format of the plaintext file is the same as when exporting as a .txt file fr
     2 Surgical Extraction
     3 Torpor Orb
 
-Sideboard is supported, and the reading the decklist is done case-insensitively.
+Sideboard is supported, and reading the decklist is done case-insensitively.
 
 ### URL
 
