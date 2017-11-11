@@ -1,5 +1,5 @@
 # TableflipperExtreme
-This is TableflipperExtreme, a MTG deck creator for Tabletop Simulator. It will eats decklists from files or from Tappedout.net, and outputs files you can import to Tabletop Simulator.
+This is TableflipperExtreme, a MTG deck creator for Tabletop Simulator. It eats decklists from files or from Tappedout.net, and outputs files you can import to Tabletop Simulator.
 
 The application will always use the oldest possible printing of a card, disregarding promo printings, with the exception of basic lands, which are always Guru lands. This is due to my personal preferences, and is not negotiable. If you really want ugly Kaladesh Invocations in your decks, see the section about importing JSON files below.
 
