@@ -85,7 +85,7 @@ Happy topdecking, scrublords.
 
 ## Data sources
 
-This application pulls card data from [MTGJSON](http://mtgjson.com/) and image data from [Scryfall](https://scryfall.com/).
+This application pulls card data from from [Scryfall API](https://scryfall.com/).
 
 ## Theme song
 
