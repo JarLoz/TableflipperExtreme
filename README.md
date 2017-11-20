@@ -17,7 +17,7 @@ Run `python flipper.py --file <decklist> --name <deckname>`
 
 ## Usage
 
-TableflipperExtreme supports three ways of importing deck data: as plaintext files, as URLS to tappedout.net, and as .json files. [Delicious example 8-Rack list](http://tappedout.net/mtg-decks/mono-black-8-rack-modern-discard/) created by The Professor from [Tolarian Community College](https://www.youtube.com/user/tolariancommunity).
+TableflipperExtreme supports two ways of importing deck data: as plaintext files and as URLS to tappedout.net. [Delicious example 8-Rack list](http://tappedout.net/mtg-decks/mono-black-8-rack-modern-discard/) created by The Professor from [Tolarian Community College](https://www.youtube.com/user/tolariancommunity).
 
 ### Plaintext
 
