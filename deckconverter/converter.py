@@ -6,14 +6,9 @@ import os
 import subprocess
 
 def processDecklist(decklist):
-    allCards, setList = downloadSourceData()
-    # Sort sets based on release date, this way we'll get the oldest sets first!
-    setOrdered = sorted(setList, key=lambda s: s['releaseDate'])
-    setNames = list(map(lambda s: s['code'], setOrdered))
-
     processedDecklist = []
     processedDecklistSideboard = []
-    extraCardNames = []
+    processedExtraCards = []
     sideboard = False
     for line in decklist:
         # Checking if we are in sideboard territory.
@@ -25,7 +20,7 @@ def processDecklist(decklist):
         if cardName == None:
             print('Skipping empty line')
             continue
-        processedCard, extra = generateProcessedCardEntry(cardName, setNames, allCards);
+        processedCard, extra = generateProcessedCardEntry(cardName);
         if processedCard != None:
             print('Found card ' + processedCard['name'])
             for i in range(count):
@@ -33,14 +28,10 @@ def processDecklist(decklist):
                     processedDecklistSideboard.append(processedCard)
                 else:
                     processedDecklist.append(processedCard)
-            extraCardNames += extra
+            processedExtraCards += extra
         else:
             print("Couldn't find card, line: " +  line)
 
-    processedExtraCards = []
-    for extraCardName in set(extraCardNames):
-        processedExtraCard, useless = generateProcessedCardEntry(extraCardName, setNames, allCards)
-        processedExtraCards.append(processedExtraCard)
     return (processedDecklist, processedDecklistSideboard, processedExtraCards)
 
 def parseDecklistLine(line):
@@ -49,40 +40,9 @@ def parseDecklistLine(line):
         return (None, None)
     count = int(splitLine[0])
     cardName = ' '.join(splitLine[1:])
-    # Corner case handling for split cards.
-    splitIndex = cardName.find('/')
-    if (splitIndex >= 0):
-        cardName = cardName[:index].strip()
     return (cardName, count)
 
-def downloadSourceData():
-    # Ensure we have the source data available.
-    os.makedirs('json', exist_ok=True)
-    if os.path.isfile('json/SetList.json') == False:
-        print('SetList.json missing, downloading')
-        response = requests.get('https://mtgjson.com/json/SetList.json')
-        with open('json/SetList.json', 'w', encoding='utf8') as outFile:
-            outFile.write(response.text)
-        del response
-    else:
-        print('SetList.json found')
-
-    if os.path.isfile('json/AllSets.json') == False:
-        print('AllSets.json missing, downloading')
-        response = requests.get('https://mtgjson.com/json/AllSets.json')
-        with open('json/AllSets.json', 'w', encoding='utf8') as outFile:
-            outFile.write(response.text)
-        del response
-    else:
-        print('AllSets.json found')
-    with open('json/AllSets.json', encoding="utf8") as inFile:
-        allCards = json.load(inFile)
-    with open('json/SetList.json', encoding="utf8") as inFile:
-        setList = json.load(inFile)
-    return (allCards, setList)
-
-
-def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
+def generateProcessedCardEntry(cardName, reprint=False):
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
     if cardName == 'Forest':
         return ({'name':'Forest','set':'PGRU','number':'1'},[])
@@ -95,44 +55,42 @@ def generateProcessedCardEntry(cardName, setNames, allCards, badSets = []):
     elif cardName == 'Swamp':
         return ({'name':'Mountain','set':'PGRU','number':'5'},[])
 
-    for setName in setNames:
-        # Some sets just suck. Including promos. Also this hack sucks.
-        if setName in badSets or (setName[0] == 'p' and len(setName) == 4):
-            continue
-        for cardInfo in allCards[setName]['cards']:
-            if cardName.lower() == cardInfo['name'].lower():
+    if reprint:
+        response = requests.get('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'"'}).json()
+    else:
+        response = requests.get('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'" not:reprint'}).json()
 
-                number = ''
-                if 'number' in cardInfo.keys():
-                    number = cardInfo['number']
-                elif 'mciNumber' in cardInfo.keys():
-                    number = cardInfo['mciNumber']
-                else:
-                    return (None,None)
-                # Slight mismatch between mtgjson and scryfall.
-                if cardName.lower() == 'hanweir battlements':
-                    number = '204a'
-                if cardName.lower() == 'chittering host':
-                    number = '96b'
 
-                # Extra cards are flipsides of double-faced and meld cards.
-                extraNames = []
-                if cardInfo['layout'] == 'double-faced':
-                    for extraCard in cardInfo['names']:
-                        if extraCard != cardName:
-                            extraNames.append(extraCard)
-                elif cardInfo['layout'] == 'meld':
-                    # Goddamn meld cards. Let's just hardcode them, there's six of them.
-                    if cardName.lower() == 'bruna, the fading light' or cardName.lower() == 'gisela, the broken blade':
-                        extraNames.append('Brisela, Voice of Nightmares')
-                    elif cardName.lower() == 'graf rats' or cardName == 'midnight scavengers':
-                        extraNames.append('Chittering Host')
-                    elif cardName.lower() == 'hanweir garrison' or cardName == 'hanweir battlements':
-                        extraNames.append('Hanweir, the Writhing Township')
+    if response['object'] == 'error':
+        print("Scryfall couldn't find "+cardName+"!")
+        return (None,None)
 
-                cardEntry = {'name':cardName, 'set':setName, 'number':number}
-                return (cardEntry,extraNames)
-    return (None,None)
+    cardInfo = response['data'][0]
+    cardEntry = {}
+
+    cardEntry['name'] = cardName
+    cardEntry['set'] = cardInfo['set']
+    cardEntry['number'] = cardInfo['collector_number']
+
+    if cardInfo['layout'] == 'transform':
+        frontFaceUrl = ""
+        backFaceUrl = ""
+        for cardFace in cardInfo['card_faces']:
+            imageUrl = cardFace['image_uris']['large']
+            if (cardFace['name'] == cardName):
+                frontFaceUrl = imageUrl[:imageUrl.find('?')]
+            else:
+                backFaceUrl = imageUrl[:imageUrl.find('?')]
+        cardEntry['image_url'] = frontFaceUrl
+        extraCardEntry = {}
+        extraCardEntry['name'] = cardInfo['name']
+        extraCardEntry['transform'] = True
+        extraCardEntry['set'] = cardInfo['set']
+        extraCardEntry['number'] = cardInfo['collector_number']
+        extraCardEntry['image_urls'] = [frontFaceUrl, backFaceUrl]
+        return (cardEntry, [extraCardEntry])
+
+    return (cardEntry, [])
 
 def downloadCardImages(processedDecklist):
     for processedCard in processedDecklist:
@@ -140,35 +98,75 @@ def downloadCardImages(processedDecklist):
 
 def downloadCardImage(processedCard):
     os.makedirs('imageCache', exist_ok=True)
-    imageName = generateCardImageName(processedCard)
+    if 'image_url' in processedCard.keys() :
+        imageUrls = [processedCard['image_url']]
+    elif 'image_urls' in processedCard.keys() :
+        imageUrls = processedCard['image_urls']
+    else:
+        imageUrls = ['https://img.scryfall.com/cards/large/en/' + processedCard['set'].lower() + '/' + processedCard['number'] + '.jpg']
+
+    for imageUrl in imageUrls:
+        downloadCardImageByUrl(imageUrl)
+
+def generateFilenameFromUrl(url):
+    reverse = url[::-1]
+    filename = reverse[:reverse.find('/')][::-1]
+    reverse = reverse[reverse.find('/')+1:]
+    setname = reverse[:reverse.find('/')][::-1]
+    return 'imageCache/'+ setname + '_' + filename
+
+def downloadCardImageByUrl(url):
+    imageName = generateFilenameFromUrl(url)
     if os.path.isfile(imageName):
-        # No need to download images twice. Shrewd dudes can make cool MS PAINT alters like this wooo
-        print('Image found for ' + processedCard['name'])
-        return;
-    print('Downloading card ' + processedCard['name'] + ' image to ' + imageName)
-    imageUrl = 'https://img.scryfall.com/cards/large/en/' + processedCard['set'].lower() + '/' + processedCard['number'] + '.jpg'
-    response = requests.get(imageUrl, stream=True)
+        print('Image found for ' + imageName)
+        return
+    print('Downloading ' + imageName)
+    response = requests.get(url, stream=True)
     with open(imageName, "wb") as out_file:
         shutil.copyfileobj(response.raw, out_file)
     del response
+    return
 
-def generateCardImageName(processedCard):
-    return 'imageCache/' + processedCard['set'] + '_' + processedCard['number'] + '.jpg'
+def generateCardImageNames(processedCard):
+    if 'image_url' in processedCard.keys():
+        return [generateFilenameFromUrl(processedCard['image_url'])]
+    elif 'image_urls' in processedCard.keys():
+        imageNames = []
+        for imageUrl in processedCard['image_urls']:
+            imageNames.append(generateFilenameFromUrl(imageUrl))
+        return imageNames
+    return ['imageCache/' + processedCard['set'] + '_' + processedCard['number'] + '.jpg']
 
-def createDeckImages(processedDecklist, deckName, hires):
+def createDeckImages(processedDecklist, deckName, hires, doubleSided):
     imageIndex = 0
     deckImageNames = []
     for i in range(0,len(processedDecklist),69) :
         chunk = processedDecklist[i:i+69]
-        imageNames = list(map(lambda card: generateCardImageName(card), chunk))
-        deckImageName = deckName+'_image_'+str(imageIndex)+".jpg"
-        deckImageNames.append(deckImageName)
-        if (hires):
-            subprocess.call(['montage'] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', deckImageName])
+        if doubleSided:
+            frontSideImageNames = []
+            backSideImageNames = []
+            for card in chunk:
+                imageNames = generateCardImageNames(card)
+                frontSideImageNames.append(imageNames[0])
+                backSideImageNames.append(imageNames[1])
+            frontDeckImageName = deckName+'_front_image_'+str(imageIndex)+".jpg"
+            backDeckImageName = deckName+'_back_image_'+str(imageIndex)+".jpg"
+            deckImageNames.append([frontDeckImageName,backDeckImageName])
+            callMontage(frontSideImageNames, frontDeckImageName, hires)
+            callMontage(backSideImageNames, backDeckImageName, hires)
         else:
-            subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', deckImageName])
+            imageNames = list(map(lambda card: generateCardImageNames(card)[0], chunk))
+            deckImageName = deckName+'_image_'+str(imageIndex)+".jpg"
+            deckImageNames.append([deckImageName])
+            callMontage(imageNames, deckImageName, hires)
         imageIndex += 1
     return deckImageNames
+
+def callMontage(imageNames, deckImageName, hires):
+    if (hires):
+        subprocess.call(['montage'] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', deckImageName])
+    else:
+        subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', deckImageName])
 
 def createDeckObject(processedDecklist, deckName, deckImageNames, posX):
     deckObject = {'Transform': {'posX':posX,'posY':1.0,'posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1},'Name': 'DeckCustom','Nickname':deckName}
@@ -188,7 +186,10 @@ def createDeckObject(processedDecklist, deckName, deckImageNames, posX):
     customDeck = {}
     customDeckIndex = 1
     for deckImageName in deckImageNames:
-        customDeck[str(customDeckIndex)] = {'NumWidth':10,'NumHeight':7,'FaceUrl':'<REPLACE WITH URL TO '+deckImageName+'>','BackUrl':'http://i.imgur.com/P7qYTcI.png'}
+        if len(deckImageName) == 1:
+            customDeck[str(customDeckIndex)] = {'NumWidth':10,'NumHeight':7,'FaceUrl':'<REPLACE WITH URL TO '+deckImageName[0]+'>','BackUrl':'http://i.imgur.com/P7qYTcI.png','UniqueBack':False}
+        else:
+            customDeck[str(customDeckIndex)] = {'NumWidth':10,'NumHeight':7,'FaceUrl':'<REPLACE WITH URL TO '+deckImageName[0]+'>','BackUrl':'<REPLACE WITH URL TO '+deckImageName[1]+'>','UniqueBack':True}
         customDeckIndex += 1
     deckObject['CustomDeck'] = customDeck
     return deckObject

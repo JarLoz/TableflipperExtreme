@@ -59,7 +59,7 @@ def generateJsonFromDecklist(decklist, deckName, hires):
         deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklistSideboard, deckName+'-sideboard', posX, hires))
         posX += 4.0
     if (processedExtraCards):
-        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX, hires))
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX, hires, doubleSided=True))
 
     return {'ObjectStates':deckObjects}
 
@@ -67,11 +67,11 @@ def generateJsonFromProcessedDecklist(processedDecklist, deckName, hires):
     deckObject = generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, 0.0, hires)
     return {'ObjectStates':[deckObject]}
 
-def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires):
+def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, doubleSided=False):
     print('Downloading card images')
     converter.downloadCardImages(processedDecklist)
     print('Creating deck images')
-    deckImageNames = converter.createDeckImages(processedDecklist, deckName, hires)
+    deckImageNames = converter.createDeckImages(processedDecklist, deckName, hires, doubleSided)
     print('Creating deck object')
     return converter.createDeckObject(processedDecklist, deckName, deckImageNames, posX)
 
