@@ -4,11 +4,50 @@ import requests
 import shutil
 import os
 import subprocess
+import re
 
-def processDecklist(decklist):
+scryfallCache = None
+
+def doRequest(url, params=None):
+    global scryfallCache
+    if scryfallCache == None:
+        if os.path.isfile('scryfallCache.json'):
+            with open('scryfallCache.json',encoding='utf8') as cacheFile:
+                scryfallCache = json.load(cacheFile)
+        else:
+            scryfallCache = {}
+    urlBuggered = url.replace('/','.').replace(':','.')
+    if (params != None):
+        paramsBuggered = params['q'].replace(' ','').replace(':','.').replace('"','').replace("'",'')
+        cacheKey = urlBuggered+paramsBuggered
+    else:
+        cacheKey = urlBuggered
+
+    if cacheKey in scryfallCache.keys():
+        print ('Cache hit!')
+        return scryfallCache[cacheKey]
+
+    response = requests.get(url,params).json()
+    if response['object'] != 'error':
+        scryfallCache[cacheKey] = response
+
+    return response
+
+def dumpCacheToFile():
+    global scryfallCache
+    if len(scryfallCache) > 0:
+        with open('scryfallCache.json', 'w',encoding='utf8') as outfile:
+            json.dump(scryfallCache, outfile)
+        print('Cache dumped')
+
+def bustCache():
+    global scryfallCache
+    scryfallCache = {}
+
+def processDecklist(decklist, reprint=False):
     processedDecklist = []
     processedDecklistSideboard = []
-    processedExtraCards = []
+    processedFlipCards = []
     sideboard = False
     for line in decklist:
         # Checking if we are in sideboard territory.
@@ -16,11 +55,22 @@ def processDecklist(decklist):
             print('Switching to sideboard')
             sideboard = True
             continue;
-        cardName, count = parseDecklistLine(line)
-        if cardName == None:
-            print('Skipping empty line')
-            continue
-        processedCard, extra = generateProcessedCardEntry(cardName);
+        if re.match('https://scryfall.com', line):
+            # It's a URL!
+            url = 'https://api.' + line.strip()[8:].replace('card','cards')
+            cardInfo = doRequest(url)
+            if cardInfo['object'] == 'error':
+                print("Scryfall couldn't find "+url+"!")
+                print(cardInfo)
+                continue
+            count = 1
+            processedCard, extra = generateProcessedCardEntryFromCardInfo(cardInfo)
+        else:
+            cardName, count = parseDecklistLine(line)
+            if cardName == None:
+                print('Skipping empty line')
+                continue
+            processedCard, extra = generateProcessedCardEntry(cardName, reprint);
         if processedCard != None:
             print('Found card ' + processedCard['name'])
             for i in range(count):
@@ -28,11 +78,11 @@ def processDecklist(decklist):
                     processedDecklistSideboard.append(processedCard)
                 else:
                     processedDecklist.append(processedCard)
-            processedExtraCards += extra
+            processedFlipCards += extra
         else:
             print("Couldn't find card, line: " +  line)
 
-    return (processedDecklist, processedDecklistSideboard, processedExtraCards)
+    return (processedDecklist, processedDecklistSideboard, processedFlipCards)
 
 def parseDecklistLine(line):
     splitLine = line.strip().split()
@@ -42,23 +92,23 @@ def parseDecklistLine(line):
     cardName = ' '.join(splitLine[1:])
     return (cardName, count)
 
-def generateProcessedCardEntry(cardName, reprint=False):
+def generateProcessedCardEntry(cardName, reprint):
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
     if cardName == 'Forest':
-        return ({'name':'Forest','set':'PGRU','number':'1'},[])
+        return ({'name':'Forest','set':'pgru','number':'1'},[])
     elif cardName == 'Island':
-        return ({'name':'Island','set':'PGRU','number':'2'},[])
+        return ({'name':'Island','set':'pgru','number':'2'},[])
     elif cardName == 'Mountain':
-        return ({'name':'Mountain','set':'PGRU','number':'3'},[])
+        return ({'name':'Mountain','set':'pgru','number':'3'},[])
     elif cardName == 'Plains':
-        return ({'name':'Plains','set':'PGRU','number':'4'},[])
+        return ({'name':'Plains','set':'pgru','number':'4'},[])
     elif cardName == 'Swamp':
-        return ({'name':'Mountain','set':'PGRU','number':'5'},[])
+        return ({'name':'Mountain','set':'pgru','number':'5'},[])
 
     if reprint:
-        response = requests.get('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'"'}).json()
+        response = doRequest('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'"'})
     else:
-        response = requests.get('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'" not:reprint'}).json()
+        response = doRequest('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'" not:reprint'})
 
 
     if response['object'] == 'error':
@@ -66,7 +116,13 @@ def generateProcessedCardEntry(cardName, reprint=False):
         return (None,None)
 
     cardInfo = response['data'][0]
+    return generateProcessedCardEntryFromCardInfo(cardInfo, cardName)
+
+def generateProcessedCardEntryFromCardInfo(cardInfo, cardName=None):
+
     cardEntry = {}
+    if cardName == None:
+        cardName = cardInfo['name']
 
     cardEntry['name'] = cardName
     cardEntry['set'] = cardInfo['set']
@@ -78,9 +134,9 @@ def generateProcessedCardEntry(cardName, reprint=False):
         for cardFace in cardInfo['card_faces']:
             imageUrl = cardFace['image_uris']['large']
             if (cardFace['name'] == cardName):
-                frontFaceUrl = imageUrl[:imageUrl.find('?')]
+                frontFaceUrl = stripUselessNumbers(imageUrl)
             else:
-                backFaceUrl = imageUrl[:imageUrl.find('?')]
+                backFaceUrl = stripUselessNumbers(imageUrl)
         cardEntry['image_url'] = frontFaceUrl
         extraCardEntry = {}
         extraCardEntry['name'] = cardInfo['name']
@@ -89,8 +145,62 @@ def generateProcessedCardEntry(cardName, reprint=False):
         extraCardEntry['number'] = cardInfo['collector_number']
         extraCardEntry['image_urls'] = [frontFaceUrl, backFaceUrl]
         return (cardEntry, [extraCardEntry])
+    elif cardInfo['layout'] == 'meld':
+        #Goddamn meld cards god damn them all. No cool tricks here, just treat them as double-faced cards.
+        frontFaceUrl = stripUselessNumbers(cardInfo['image_uris']['large'])
+        cardEntry['image_url'] = frontFaceUrl
+        extraCardUrl = ""
+        for part in cardInfo['all_parts']:
+            if re.match('b',part['uri'][::-1]):
+                extraCardUrl = part['uri']
+                break
+        extraCardInfo = doRequest(extraCardUrl)
+        backFaceUrl = stripUselessNumbers(extraCardInfo['image_uris']['large'])
+        extraCardEntry = {}
+        extraCardEntry['name'] = extraCardInfo['name']
+        extraCardEntry['set'] = extraCardInfo['set']
+        extraCardEntry['number'] = extraCardInfo['collector_number']
+        extraCardEntry['image_urls'] = [frontFaceUrl, backFaceUrl]
+        return (cardEntry, [extraCardEntry])
 
     return (cardEntry, [])
+
+def stripUselessNumbers(url):
+    return url[:url.find('?')]
+
+def findTokenInfo(cardInfo):
+    #TODO Finish this, and fetch tokens for cards.
+    if 'oracle_text' in cardInfo.keys():
+        createIndex = cardInfo['oracle_text'].lower().find('create')
+        if createIndex > -1:
+            tokenIndex = cardInfo['oracle_text'].find('token')
+            tokenInfo = cardInfo['oracle_text'][createIndex+6:tokenIndex].split()
+            name = None
+            colors = ""
+            power = None
+            toughness = None
+            for part in tokenInfo:
+                if part == 'white':
+                    colors += 'w'
+                elif part == 'blue':
+                    colors += 'u'
+                elif part == 'black':
+                    colors += 'b'
+                elif part == 'red':
+                    colors += 'r'
+                elif part == 'green':
+                    colors += 'g'
+                elif re.search('/',part):
+                    split = part.split()
+                    power = split[0]
+                    toughness = split[1]
+                elif re.search('[A-Z]', part):
+                    if name == None:
+                        name = part
+                    else:
+                        name += " "
+                        name += part
+
 
 def downloadCardImages(processedDecklist):
     for processedCard in processedDecklist:
@@ -135,7 +245,7 @@ def generateCardImageNames(processedCard):
         for imageUrl in processedCard['image_urls']:
             imageNames.append(generateFilenameFromUrl(imageUrl))
         return imageNames
-    return ['imageCache/' + processedCard['set'] + '_' + processedCard['number'] + '.jpg']
+    return ['imageCache/' + processedCard['set'].lower() + '_' + processedCard['number'] + '.jpg']
 
 def createDeckImages(processedDecklist, deckName, hires, doubleSided):
     imageIndex = 0
