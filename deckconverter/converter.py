@@ -55,7 +55,7 @@ def processDecklist(decklist, reprint=False):
             print('Switching to sideboard')
             sideboard = True
             continue;
-        if re.match('https://scryfall.com', line):
+        if re.match('https://scryfall.com', line.strip()):
             # It's a URL!
             url = 'https://api.' + line.strip()[8:].replace('card','cards')
             cardInfo = doRequest(url)
@@ -66,7 +66,7 @@ def processDecklist(decklist, reprint=False):
             count = 1
             processedCard, extra = generateProcessedCardEntryFromCardInfo(cardInfo)
         else:
-            cardName, count = parseDecklistLine(line)
+            cardName, count = parseDecklistLine(line.strip())
             if cardName == None:
                 print('Skipping empty line')
                 continue
@@ -85,7 +85,7 @@ def processDecklist(decklist, reprint=False):
     return (processedDecklist, processedDecklistSideboard, processedFlipCards)
 
 def parseDecklistLine(line):
-    splitLine = line.strip().split()
+    splitLine = line.split()
     if len(splitLine) <= 1:
         return (None, None)
     count = int(splitLine[0])

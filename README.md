@@ -1,5 +1,5 @@
 # TableflipperExtreme
-This is TableflipperExtreme, a MTG deck creator for Tabletop Simulator. It eats decklists from files or from Tappedout.net, and outputs files you can import to Tabletop Simulator.
+This is TableflipperExtreme, a MTG deck creator for Tabletop Simulator. It eats decklists from files or from Tappedout.net and deckbox.org, and outputs files you can import to Tabletop Simulator.
 
 The application will always use the oldest possible printing of a card, disregarding promo printings, with the exception of basic lands, which are always Guru lands. For those willing, there is an option to use the latest reprintings of cards, or even specific printings. See the `--reprint` option as well as the section about adding scryfall URLS to plaintext decklists.
 
@@ -63,6 +63,8 @@ Also, instead of giving card counts and numbers, it is possible to just list the
 To create a decklist using an URL, simply use the `--url` option:
 
     python flipper.py --url "http://tappedout.net/mtg-decks/mono-black-8-rack-modern-discard/" --name 8-Rack
+
+This works with deckbox.org URLS aswell.
 
 ## Getting the results into Tabletop Simulator
 

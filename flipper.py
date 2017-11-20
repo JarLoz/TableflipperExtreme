@@ -3,6 +3,7 @@ import json
 from deckconverter import converter 
 import argparse
 import requests
+import re
 
 def main():
     parser = argparse.ArgumentParser()
@@ -41,8 +42,18 @@ def main():
             decklist = decklistfile.readlines()
     elif (args.url):
         print('Generating from URL ' + args.url)
-        response = requests.get(args.url+'?fmt=txt')
-        decklist = response.text.split('\n')
+        if re.match('https://deckbox.org', args.url):
+            # Deckbox.org URL
+            response = requests.get(args.url+'/export')
+            deckboxHtml = response.text
+            bodyStart = re.search('<body>', deckboxHtml).end()
+            bodyEnd = re.search('</body>', deckboxHtml).start()
+            deckboxHtmlBody = deckboxHtml[bodyStart:bodyEnd]
+            decklist = deckboxHtmlBody.replace('<p>','').replace('</p>','').replace('<strong>','').replace('</strong>','').split('<br/>')
+        elif re.match('http://tappedout.net', args.url):
+            #Tappedout URL
+            response = requests.get(args.url+'?fmt=txt')
+            decklist = response.text.split('\n')
         del response
 
     print('Processing decklist')
