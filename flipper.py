@@ -12,6 +12,7 @@ def main():
     parser.add_argument('--hires', help='Use high resolution versions of card images. Causes very large file sizes', action='store_true')
     parser.add_argument('--reprints', help='Use the latest reprints of the cards', action='store_true')
     parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_true')
+    parser.add_argument('--imgur', help='Imgur integration. Requires imgurInfo.json', action='store_true')
     parser.add_argument('input', help='Filename or URL of the decklist')
     args = parser.parse_args()
 
@@ -22,11 +23,15 @@ def main():
     hires = args.hires
     reprint = args.reprints
     nocache = args.nocache
+    imgur = None
+    if (args.imgur):
+        with open('imgurInfo.json', encoding='utf8') as imgurInfo:
+            imgur = json.load(imgurInfo)
 
     decklist = getDecklist(args.input)
 
     print('Processing decklist')
-    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache)
+    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgur)
 
     if (args.nocache == False):
         scryfall.dumpCacheToFile()

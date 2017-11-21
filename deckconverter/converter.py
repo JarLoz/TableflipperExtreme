@@ -1,8 +1,9 @@
 from . import processor
 from . import images
 from deckconverter import scryfall
+from gimgurpython import ImgurClient
 
-def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False):
+def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgur=None):
     """
     Converts a given decklist to the JSON format used by Tabletop Simulator, as well
     as generating the required images. The decklist is assumed to be a list of strings.
@@ -17,17 +18,17 @@ def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False):
 
     deckObjects = []
     posX = 0.0
-    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires))
+    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, imgur=imgur))
     posX += 4.0
     if (processedDecklistSideboard):
-        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklistSideboard, deckName+'-sideboard', posX, hires))
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklistSideboard, deckName+'-sideboard', posX, hires, imgur=imgur))
         posX += 4.0
     if (processedExtraCards):
-        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX, hires, doubleSided=True))
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX, hires, doubleSided=True, imgur=imgur))
 
     return {'ObjectStates':deckObjects}
 
-def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, doubleSided=False):
+def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, doubleSided=False, imgur=None):
     """
     Downloads the cards and creates the TTS deck object for a given processed decklist.
     """
@@ -36,9 +37,9 @@ def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, h
     print('Creating deck images')
     deckImageNames = images.createDeckImages(processedDecklist, deckName, hires, doubleSided)
     print('Creating deck object')
-    return createDeckObject(processedDecklist, deckName, deckImageNames, posX)
+    return createDeckObject(processedDecklist, deckName, deckImageNames, posX, imgur)
 
-def createDeckObject(processedDecklist, deckName, deckImageNames, posX):
+def createDeckObject(processedDecklist, deckName, deckImageNames, posX, imgur=None):
     """
     Creates a TTS deck object from a given processed decklist.
     """
@@ -59,10 +60,31 @@ def createDeckObject(processedDecklist, deckName, deckImageNames, posX):
     customDeck = {}
     customDeckIndex = 1
     for deckImageName in deckImageNames:
-        if len(deckImageName) == 1:
-            customDeck[str(customDeckIndex)] = {'NumWidth':10,'NumHeight':7,'FaceUrl':'<REPLACE WITH URL TO '+deckImageName[0]+'>','BackUrl':'http://i.imgur.com/P7qYTcI.png','UniqueBack':False}
+
+        faceUrl = getDeckUrl(deckImageName[0], imgur)
+
+        uniqueBack = False
+        if len(deckImageName) == 2:
+            uniqueBack = True
+            backUrl = getDeckUrl(deckImageName[1], imgur)
         else:
-            customDeck[str(customDeckIndex)] = {'NumWidth':10,'NumHeight':7,'FaceUrl':'<REPLACE WITH URL TO '+deckImageName[0]+'>','BackUrl':'<REPLACE WITH URL TO '+deckImageName[1]+'>','UniqueBack':True}
+            backUrl = 'https://i.imgur.com/P7qYTcI.png'
+
+        customDeck[str(customDeckIndex)] = {'NumWidth':10,'NumHeight':7,'FaceUrl':faceUrl,'BackUrl':backUrl,'UniqueBack':uniqueBack}
         customDeckIndex += 1
     deckObject['CustomDeck'] = customDeck
     return deckObject
+
+def getDeckUrl(deckImage, imgur):
+    if (imgur):
+        return uploadToImgur(deckImage, imgur)
+    else:
+        return '<REPLACE WITH URL TO ' + deckImage + '>'
+
+def uploadToImgur(deckImage, imgurInfo):
+    print('Uploading file ' + deckImage + ' to Imgur!')
+    client = ImgurClient(imgurInfo['client_id'], imgurInfo['client_secret'])
+    with open(deckImage, 'rb') as imageFp:
+        response = client.upload(imageFp)
+    return response['link']
+

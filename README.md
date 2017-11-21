@@ -93,11 +93,23 @@ Creating custom magic cards is fun! Having been inspired by the incredible [Urza
     custom_2.jpg
     custom_3.jpg
 
-Now, as long as the named custom_#.jpg files are in the `imageCache/` folder, you can create the deck as usual:
+Now, as long as the named custom#.jpg files are in the `imageCache/` folder, you can create the deck as usual:
 
     python flipper.py -n CustomDeck decklist.txt
 
 You can even mix your custom cards with normal cards, but in this case make sure your custom card images are the same size as the ones downloaded from scryfall (672x936 pixels), or your cards will end up with white borders.
+
+## Imgur integration
+
+Note: this is an experimental feature for advanced users. 
+
+By using the `--imgur` option, the app will upload the deck images to Imgur automatically, bypassing the need to upload and edit the deck JSON files yourself. However, Imgur requires all clients using their API to register and supply the credentials given to them, namely the `client_id` and `client_secret`. You can generate your own API credentials from here: [Add Client - Imgur](https://api.imgur.com/oauth2/addclient). Once you have the Client ID and Client Secret, edit the file called imgurInfo.json in the application folder, and put your credentials in it:
+
+	{'client_id':'EXAMPLECLIENTID123','client_secret':'EXAMPLECLIENTSECRET123'}
+
+Now you can use the integration by simply adding the `--imgur` option:
+
+    python flipper.py -n 8-Rack --imgur 8rack.txt
 
 ## Data sources and caching
 
