@@ -40,7 +40,7 @@ def dumpCacheToFile():
     exiting the application in order to have any use of the cache.
     """
     global scryfallCache
-    if len(scryfallCache) > 0:
+    if scryfallCache != None and len(scryfallCache) > 0:
         with open('scryfallCache.json', 'w',encoding='utf8') as outfile:
             json.dump(scryfallCache, outfile)
         print('Cache dumped')
