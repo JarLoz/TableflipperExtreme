@@ -1,12 +1,19 @@
 from . import processor
 from . import images
+from deckconverter import scryfall
 
-def convertDecklistToJSON(decklist, deckName, hires, reprint, cache=True, customcards=False):
+def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False):
     """
     Converts a given decklist to the JSON format used by Tabletop Simulator, as well
     as generating the required images. The decklist is assumed to be a list of strings.
     """
-    processedDecklist,processedDecklistSideboard,processedExtraCards = processor.processDecklist(decklist, reprint, customcards)
+    if (nocache):
+        scryfall.bustCache()
+
+    processedDecklist,processedDecklistSideboard,processedExtraCards = processor.processDecklist(decklist, reprint)
+
+    if (nocache == False):
+        scryfall.dumpCacheToFile()
 
     deckObjects = []
     posX = 0.0

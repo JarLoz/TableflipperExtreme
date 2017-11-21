@@ -1,7 +1,7 @@
 import re
 from . import scryfall
 
-def processDecklist(decklist, reprint=False, customcards=False):
+def processDecklist(decklist, reprint=False):
     """
     Processes a given decklist into a "processed decklist" form. This processed form is a list of maps that detail the
     name, set and collector's number of a card, as well as optionally the image url(s) of the card.
@@ -11,32 +11,35 @@ def processDecklist(decklist, reprint=False, customcards=False):
     processedFlipCards = []
     sideboard = False
     for line in decklist:
-        if customcards:
-            name = ''.join(line.strip().split('.')[:-1])
-            imageName = 'imageCache/' + line.strip()
-            processedDecklist.append({'name':name, 'set':'custom', 'number':'1', 'image_name':imageName})
-            continue
         # Checking if we are in sideboard territory.
         if line.strip().lower() == 'sideboard:':
             print('Switching to sideboard')
             sideboard = True
             continue;
-        if re.match('https://scryfall.com', line.strip()):
+        cardName, count = parseDecklistLine(line.strip())
+        if cardName == None:
+            print('Skipping empty line')
+            continue
+
+        if re.match('https://scryfall.com', cardName):
             # It's a URL!
-            url = 'https://api.' + line.strip()[8:].replace('card','cards')
+            url = 'https://api.' + cardName[8:].replace('card','cards')
             cardInfo = scryfall.doRequest(url)
             if cardInfo['object'] == 'error':
                 print("Scryfall couldn't find "+url+"!")
                 print(cardInfo)
                 continue
-            count = 1
             processedCard, extra = generateProcessedCardEntryFromCardInfo(cardInfo)
+        elif re.search('(\.jpg|\.png)$', cardName):
+            # Custom card!
+            name = ''.join(cardName.split('.')[:-1])
+            imageName = 'imageCache/' + cardName.strip()
+            processedCard = {'name':name, 'set':'custom', 'number':'1', 'image_name':imageName}
+            extra = []
         else:
-            cardName, count = parseDecklistLine(line.strip())
-            if cardName == None:
-                print('Skipping empty line')
-                continue
+            # It's just a card name!
             processedCard, extra = generateProcessedCardEntry(cardName, reprint);
+
         if processedCard != None:
             print('Found card ' + processedCard['name'])
             for i in range(count):
@@ -55,10 +58,16 @@ def parseDecklistLine(line):
     Parses the relevant information from a decklist line.
     """
     splitLine = line.split()
-    if len(splitLine) <= 1:
+    if len(splitLine) < 1:
         return (None, None)
-    count = int(splitLine[0])
-    cardName = ' '.join(splitLine[1:])
+    if (re.match('\d+$',splitLine[0])):
+        # A digit means a count. I hope.
+        count = int(splitLine[0])
+        cardName = ' '.join(splitLine[1:])
+    else:
+        # No digit, assuming count of one.
+        count = 1
+        cardName = line
     return (cardName, count)
 
 def generateProcessedCardEntryFromCardInfo(cardInfo, cardName=None):

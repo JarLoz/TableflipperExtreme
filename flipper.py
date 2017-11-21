@@ -11,8 +11,7 @@ def main():
     parser.add_argument('-n','--name', help='Name of the deck')
     parser.add_argument('--hires', help='Use high resolution versions of card images. Causes very large file sizes', action='store_true')
     parser.add_argument('--reprints', help='Use the latest reprints of the cards', action='store_true')
-    parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_false')
-    parser.add_argument('--customcards', help='Generate deck from a list of custom card images. Card images must be placed in imageCache folder.', action='store_true')
+    parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_true')
     parser.add_argument('input', help='Filename or URL of the decklist')
     args = parser.parse_args()
 
@@ -22,13 +21,12 @@ def main():
 
     hires = args.hires
     reprint = args.reprints
-    cache = args.nocache
-    customcards = args.customcards
+    nocache = args.nocache
 
-    decklist = getDecklist(args.input, customcards)
+    decklist = getDecklist(args.input)
 
     print('Processing decklist')
-    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, cache, customcards)
+    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache)
 
     if (args.nocache == False):
         scryfall.dumpCacheToFile()
@@ -37,12 +35,12 @@ def main():
         json.dump(ttsJson, outfile, indent=2)
     print('All done')
 
-def getDecklist(inputStr, customcards = False):
+def getDecklist(inputStr):
     """
     Finds the decklist list from a given input string. If the string is an URL to deckbox.org or tappedout.net,
     the function will try to download the decklist. Otherwise, the string is interpreted to be a filename.
     """
-    if (re.match('http', inputStr) and customcards == False):
+    if re.match('http', inputStr):
         print('Generating from URL ' + inputStr)
         if re.match('https://deckbox.org', inputStr):
             # Deckbox.org URL

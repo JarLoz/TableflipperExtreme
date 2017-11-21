@@ -51,12 +51,13 @@ The format of the plaintext file is the same as when exporting as a .txt file fr
     2 Surgical Extraction
     3 Torpor Orb
 
-Sideboard is supported, and reading the decklist is done case-insensitively.
+Sideboard is supported, and reading the decklist is done case-insensitively. If the card count is missing, it is assumed to be 1.
 
-Also, instead of giving card counts and numbers, it is possible to just list the URLs to their respective scryfall pages. This mode is very useful for generating tokens and getting specific prints of cards. Note that giving the count of the card is not supported for direct URLs. For example, the example below will result in a deck consisting of Krenko and a Goblin token.
+Also, instead of giving card counts and numbers, it is possible to just list the URLs to their respective scryfall pages. This mode is very useful for generating tokens and getting specific prints of cards. For example, the example below will result in a deck consisting of Krenko and a Goblin token.
 
-    1 Krenko, Mob Boss
+    Krenko, Mob Boss
     https://scryfall.com/card/tdds/3
+
 
 ### URL
 
@@ -86,16 +87,17 @@ While I personally enjoy the style of older magic cards, there is an option to u
 
 ## Custom cards
 
-Creating custom magic cards is fun! Having been inspired by the incredible [Urza's Dream Engine](http://andymakes.com/urzasdreamengine/), I added support for custom cards in Tableflipper Extreme. By using the `--customcards` option and a decklist of image names, you can create decks from completely custom cards. For example, let's assume a `decklist.txt` file containing the following:
+Creating custom magic cards is fun! Having been inspired by the incredible [Urza's Dream Engine](http://andymakes.com/urzasdreamengine/), I added support for custom cards in Tableflipper Extreme. By adding filenames to your decklist, you can create cards from custom images. For example, let's assume a `decklist.txt` file containing the following:
 
     custom_1.jpg
     custom_2.jpg
     custom_3.jpg
 
-Now, as long as the named custom_#.jpg files are in the `imageCache/` folder, you can use the `--customcards`:
+Now, as long as the named custom_#.jpg files are in the `imageCache/` folder, you can create the deck as usual:
 
-    python flipper.py -n CustomDeck --customcards decklist.txt
+    python flipper.py -n CustomDeck decklist.txt
 
+You can even mix your custom cards with normal cards, but in this case make sure your custom card images are the same size as the ones downloaded from scryfall (672x936 pixels), or your cards will end up with white borders.
 
 ## Data sources and caching
 
