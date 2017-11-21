@@ -1,12 +1,12 @@
 from . import processor
 from . import images
 
-def convertDecklistToJSON(decklist, deckName, hires, reprint):
+def convertDecklistToJSON(decklist, deckName, hires, reprint, cache=True, customcards=False):
     """
     Converts a given decklist to the JSON format used by Tabletop Simulator, as well
     as generating the required images. The decklist is assumed to be a list of strings.
     """
-    processedDecklist,processedDecklistSideboard,processedExtraCards = processor.processDecklist(decklist, reprint)
+    processedDecklist,processedDecklistSideboard,processedExtraCards = processor.processDecklist(decklist, reprint, customcards)
 
     deckObjects = []
     posX = 0.0
@@ -45,8 +45,8 @@ def createDeckObject(processedDecklist, deckName, deckImageNames, posX):
         containedObjects.append(cardObject)
         deckIds.append(cardId)
         cardId += 1
-        if cardId == 169:
-            cardId = 200
+        if int(str(cardId)[1:]) == 69:
+            cardId += 31
     deckObject['ContainedObjects'] = containedObjects
     deckObject['DeckIDs'] = deckIds
     customDeck = {}

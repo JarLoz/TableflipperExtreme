@@ -5,4 +5,5 @@ imageCache/
 *.swp
 *.jpg
 *.json
+*.pyc
 __pycache__/

@@ -1,7 +1,7 @@
 import re
 from . import scryfall
 
-def processDecklist(decklist, reprint=False):
+def processDecklist(decklist, reprint=False, customcards=False):
     """
     Processes a given decklist into a "processed decklist" form. This processed form is a list of maps that detail the
     name, set and collector's number of a card, as well as optionally the image url(s) of the card.
@@ -11,6 +11,11 @@ def processDecklist(decklist, reprint=False):
     processedFlipCards = []
     sideboard = False
     for line in decklist:
+        if customcards:
+            name = ''.join(line.strip().split('.')[:-1])
+            imageName = 'imageCache/' + line.strip()
+            processedDecklist.append({'name':name, 'set':'custom', 'number':'1', 'image_name':imageName})
+            continue
         # Checking if we are in sideboard territory.
         if line.strip().lower() == 'sideboard:':
             print('Switching to sideboard')

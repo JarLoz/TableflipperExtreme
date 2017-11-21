@@ -18,6 +18,9 @@ def downloadCardImage(processedCard):
     the set and collectors number of the card.
     """
     os.makedirs('imageCache', exist_ok=True)
+    if 'image_name' in processedCard.keys() :
+        #Custom card, no need to do anything.
+        return
     if 'image_url' in processedCard.keys() :
         imageUrls = [processedCard['image_url']]
     elif 'image_urls' in processedCard.keys() :
@@ -62,7 +65,9 @@ def generateCardImageNames(processedCard):
     Transforms the processed card information into a local filename, similarly to
     the generateFilenameFromUrl() function.
     """
-    if 'image_url' in processedCard.keys():
+    if 'image_name' in processedCard.keys():
+        return [processedCard['image_name']]
+    elif 'image_url' in processedCard.keys():
         return [generateFilenameFromUrl(processedCard['image_url'])]
     elif 'image_urls' in processedCard.keys():
         imageNames = []
