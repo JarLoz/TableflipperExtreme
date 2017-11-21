@@ -53,7 +53,7 @@ The format of the plaintext file is the same as when exporting as a .txt file fr
 
 Sideboard is supported, and reading the decklist is done case-insensitively. If the card count is missing, it is assumed to be 1.
 
-Also, instead of giving card counts and numbers, it is possible to just list the URLs to their respective scryfall pages. This mode is very useful for generating tokens and getting specific prints of cards. For example, the example below will result in a deck consisting of Krenko and a Goblin token.
+Also, instead of giving card names, it is possible to just list the URLs to their respective scryfall pages. This mode is very useful for generating tokens and getting specific prints of cards. For example, the example below will result in a deck consisting of Krenko and a Goblin token.
 
     Krenko, Mob Boss
     https://scryfall.com/card/tdds/3
