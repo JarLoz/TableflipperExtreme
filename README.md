@@ -84,6 +84,19 @@ While I personally enjoy the style of older magic cards, there is an option to u
 
     python flipper.py -n 8-Rack --reprint 8rack.txt
 
+## Custom cards
+
+Creating custom magic cards is fun! Having been inspired by the incredible [Urza's Dream Engine](http://andymakes.com/urzasdreamengine/), I added support for custom cards in Tableflipper Extreme. By using the `--customcards` option and a decklist of image names, you can create decks from completely custom cards. For example, let's assume a `decklist.txt` file containing the following:
+
+    custom_1.jpg
+    custom_2.jpg
+    custom_3.jpg
+
+Now, as long as the named custom_#.jpg files are in the `imageCache/` folder, you can use the `--customcards`:
+
+    python flipper.py -n CustomDeck --customcards decklist.txt
+
+
 ## Data sources and caching
 
 This application pulls card data from from [Scryfall](https://scryfall.com/). Both API calls and image downloads are cached locally. The API calls are cached to a generated file called `scryfallCache.json`, and the images are cached to the directory `imageCache/`. 
