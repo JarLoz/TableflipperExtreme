@@ -28,16 +28,18 @@ def main():
         with open('imgurInfo.json', encoding='utf8') as imgurInfo:
             imgur = json.load(imgurInfo)
 
-    decklist = getDecklist(args.input)
+    generate(args.input, deckName, hires, reprint, nocache, imgur)
+
+def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgur=None, queue=None):
+    decklist = getDecklist(inputStr)
 
     print('Processing decklist')
     ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgur)
 
-    if (args.nocache == False):
-        scryfall.dumpCacheToFile()
-
     with open(deckName+'.json', 'w',encoding='utf8') as outfile:
         json.dump(ttsJson, outfile, indent=2)
+    if queue:
+        queue.put('done')
     print('All done')
 
 def getDecklist(inputStr):
