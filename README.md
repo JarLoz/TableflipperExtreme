@@ -1,5 +1,6 @@
-# TableflipperExtreme
-This is TableflipperExtreme, a MTG deck creator for Tabletop Simulator. It eats decklists from files or directly from tappedout.net and deckbox.org, and outputs files you can import to Tabletop Simulator.
+![TableflipperExtreme](logo.png?raw=true "Tableflipper Extreme")
+
+This is Tableflipper Extreme, a MTG deck creator for Tabletop Simulator. It eats decklists from files or directly from tappedout.net and deckbox.org, and outputs files you can import to Tabletop Simulator.
 
 The application will always use the oldest possible printing of a card, disregarding promo printings, with the exception of basic lands, which are always Guru lands. For those willing, there is an option to use the latest reprintings of cards, or even specific printings. See the `--reprint` option as well as the section about adding scryfall URLS to plaintext decklists.
 
