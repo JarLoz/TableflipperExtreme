@@ -29,20 +29,25 @@ def main():
     hires = args.hires
     reprint = args.reprints
     nocache = args.nocache
-    imgur = None
-    if (args.imgur):
-        with open('imgurInfo.json', encoding='utf8') as imgurInfo:
-            imgur = json.load(imgurInfo)
+    imgur = args.imgur
 
     generate(args.input, deckName, hires, reprint, nocache, imgur)
 
-def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgur=None):
+def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgur=False, output=''):
+    print('Processing decklist')
     try:
+        imgurInfo = None
+        if (imgur):
+            if (os.path.isfile('imgurInfo.json') == False):
+                print('imgurInfo.json missing!')
+                queue.sendMessage({'type':'error', 'text':'imgurInfo.json missing!'})
+                return
+            with open('imgurInfo.json', encoding='utf8') as imgurInfoFile:
+                imgurInfo = json.load(imgurInfoFile)
         decklist = getDecklist(inputStr)
-        print('Processing decklist')
-        ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgur)
-
-        with open(deckName+'.json', 'w',encoding='utf8') as outfile:
+        ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurInfo, output)
+        ttsJsonFilename = os.path.join(output, deckName+'.json')
+        with open(ttsJsonFilename, 'w',encoding='utf8') as outfile:
             json.dump(ttsJson, outfile, indent=2)
         queue.sendMessage({'type':'done'})
         print('All done')

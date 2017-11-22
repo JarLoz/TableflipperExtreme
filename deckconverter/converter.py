@@ -3,7 +3,7 @@ from . import images
 from . import scryfall
 from gimgurpython import ImgurClient
 
-def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgur=None):
+def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgur=None, output=''):
     """
     Converts a given decklist to the JSON format used by Tabletop Simulator, as well
     as generating the required images. The decklist is assumed to be a list of strings.
@@ -18,24 +18,24 @@ def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, img
 
     deckObjects = []
     posX = 0.0
-    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, imgur=imgur))
+    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, imgur=imgur, output=output))
     posX += 4.0
     if (processedDecklistSideboard):
-        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklistSideboard, deckName+'-sideboard', posX, hires, imgur=imgur))
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklistSideboard, deckName+'-sideboard', posX, hires, imgur=imgur, output=output))
         posX += 4.0
     if (processedExtraCards):
-        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX, hires, doubleSided=True, imgur=imgur))
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX, hires, doubleSided=True, imgur=imgur, output=output))
 
     return {'ObjectStates':deckObjects}
 
-def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, doubleSided=False, imgur=None):
+def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, doubleSided=False, imgur=None, output=''):
     """
     Downloads the cards and creates the TTS deck object for a given processed decklist.
     """
     print('Downloading card images')
     images.downloadCardImages(processedDecklist)
     print('Creating deck images')
-    deckImageNames = images.createDeckImages(processedDecklist, deckName, hires, doubleSided)
+    deckImageNames = images.createDeckImages(processedDecklist, deckName, hires, doubleSided, output)
     print('Creating deck object')
     return createDeckObject(processedDecklist, deckName, deckImageNames, posX, imgur)
 

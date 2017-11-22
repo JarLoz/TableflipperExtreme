@@ -42,7 +42,7 @@ class FlipperGui(tk.Frame):
         self.outputEntry = tk.Entry(self, width=60)
         self.outputEntry.grid(row=3, column=1, columnspan=3)
 
-        self.outputButton = tk.Button(self, text='Browse', command=self.openFile)
+        self.outputButton = tk.Button(self, text='Browse', command=self.openFolder)
         self.outputButton.grid(row=3, column=4, sticky=tk.E)
 
         self.hiresVar = tk.IntVar()
@@ -91,20 +91,30 @@ class FlipperGui(tk.Frame):
         self.inputEntry.delete(0, tk.END)
         self.inputEntry.insert(0, filename)
 
+    def openFolder(self):
+        currentdir = os.path.dirname(os.path.realpath(__file__))
+        dirname = filedialog.askdirectory(initialdir=currentdir,parent=self,title='Output directory')
+        self.outputEntry.delete(0, tk.END)
+        self.outputEntry.insert(0, dirname)
+
     def generate(self):
         inputStr = self.inputEntry.get()
         deckName = self.deckNameEntry.get()
+        outputFolder = self.outputEntry.get()
         if len(inputStr) == 0:
-            self.updateProgressLabel('Must give filename or URL')
+            self.updateProgressLabel('Must give filename or URL', fg='red')
             return
         if len(deckName) == 0:
-            self.updateProgressLabel('Must give a deckname')
+            self.updateProgressLabel('Must give a deckname', fg='red')
+            return
+        if len(outputFolder) and not os.path.isdir(outputFolder):
+            self.updateProgressLabel('Output folder must exist', fg='red')
             return
         hires = bool(self.hiresVar.get())
         reprints = bool(self.reprintsVar.get())
         nocache = bool(self.nocacheVar.get())
         imgur = bool(self.imgurVar.get())
-        self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName))
+        self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName, hires, reprints, nocache, imgur, outputFolder))
         self.thread.start()
         self.disableInputs()
         self.updateProgressLabel('Generating....')

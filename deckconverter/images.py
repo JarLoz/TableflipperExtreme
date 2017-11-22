@@ -11,8 +11,7 @@ def downloadCardImages(processedDecklist):
     imageNumber = 1
     imageCount = len(processedDecklist)
     for processedCard in processedDecklist:
-        if queue.flipperQueue:
-            queue.flipperQueue.put({'type':'message','text':'Downloading card ('+str(imageNumber)+'/'+str(imageCount)+')'})
+        queue.sendMessage({'type':'message','text':'Downloading card ('+str(imageNumber)+'/'+str(imageCount)+')'})
         imageNumber += 1
         downloadCardImage(processedCard)
 
@@ -82,7 +81,7 @@ def generateCardImageNames(processedCard):
         return imageNames
     return ['imageCache/' + processedCard['set'].lower() + '_' + processedCard['number'] + '.jpg']
 
-def createDeckImages(processedDecklist, deckName, hires, doubleSided):
+def createDeckImages(processedDecklist, deckName, hires, doubleSided, output=''):
     """
     Creates the deck image sheets used by TTS from a given processed decklist. The generated images are of
     the format deckname_image_#_.jpg, where # is a running number. TTS has a limit of 69 cards per deck sheet,
@@ -91,6 +90,7 @@ def createDeckImages(processedDecklist, deckName, hires, doubleSided):
     """
     imageIndex = 0
     deckImageNames = []
+    queue.sendMessage({'type':'message', 'text':'Generating images.'})
     for i in range(0,len(processedDecklist),69) :
         chunk = processedDecklist[i:i+69]
         if doubleSided:
@@ -103,21 +103,22 @@ def createDeckImages(processedDecklist, deckName, hires, doubleSided):
             frontDeckImageName = deckName+'_front_image_'+str(imageIndex)+".jpg"
             backDeckImageName = deckName+'_back_image_'+str(imageIndex)+".jpg"
             deckImageNames.append([frontDeckImageName,backDeckImageName])
-            callMontage(frontSideImageNames, frontDeckImageName, hires)
-            callMontage(backSideImageNames, backDeckImageName, hires)
+            callMontage(frontSideImageNames, frontDeckImageName, hires, output)
+            callMontage(backSideImageNames, backDeckImageName, hires, output)
         else:
             imageNames = list(map(lambda card: generateCardImageNames(card)[0], chunk))
             deckImageName = deckName+'_image_'+str(imageIndex)+".jpg"
             deckImageNames.append([deckImageName])
-            callMontage(imageNames, deckImageName, hires)
+            callMontage(imageNames, deckImageName, hires, output)
         imageIndex += 1
     return deckImageNames
 
-def callMontage(imageNames, deckImageName, hires):
+def callMontage(imageNames, deckImageName, hires, output=''):
     """
     Calls the external montage tool from Imagemagick package to do the image composition.
     """
+    imagePath = os.path.join(output, deckImageName)
     if (hires):
-        subprocess.call(['montage'] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', deckImageName])
+        subprocess.call(['montage'] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', imagePath])
     else:
-        subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', deckImageName])
+        subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', imagePath])
