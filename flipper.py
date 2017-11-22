@@ -15,6 +15,7 @@ def main():
     initApp()
     parser = argparse.ArgumentParser()
     parser.add_argument('-n','--name', help='Name of the deck')
+    parser.add_argument('-o','--output', help='Output folder for the deck files')
     parser.add_argument('--hires', help='Use high resolution versions of card images. Causes very large file sizes', action='store_true')
     parser.add_argument('--reprints', help='Use the latest reprints of the cards', action='store_true')
     parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_true')
@@ -30,8 +31,14 @@ def main():
     reprint = args.reprints
     nocache = args.nocache
     imgur = args.imgur
+    output = args.output
+    if output == None:
+        output = ''
+    elif not os.path.isdir(output):
+        print('Output path not valid! Path: '+output)
+        return
 
-    generate(args.input, deckName, hires, reprint, nocache, imgur)
+    generate(args.input, deckName, hires, reprint, nocache, imgur, output)
 
 def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgur=False, output=''):
     print('Processing decklist')
