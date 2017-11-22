@@ -2,6 +2,7 @@ import sys
 import json
 from deckconverter import converter 
 from deckconverter import scryfall
+from deckconverter import queue
 import argparse
 import requests
 import re
@@ -30,7 +31,7 @@ def main():
 
     generate(args.input, deckName, hires, reprint, nocache, imgur)
 
-def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgur=None, queue=None):
+def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgur=None):
     decklist = getDecklist(inputStr)
 
     print('Processing decklist')
@@ -38,8 +39,8 @@ def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgu
 
     with open(deckName+'.json', 'w',encoding='utf8') as outfile:
         json.dump(ttsJson, outfile, indent=2)
-    if queue:
-        queue.put('done')
+    if queue.flipperQueue:
+        queue.flipperQueue.put('done')
     print('All done')
 
 def getDecklist(inputStr):

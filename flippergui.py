@@ -4,14 +4,14 @@ import sys
 import os
 import flipper
 import threading
-import queue
+from deckconverter import queue
 
 class FlipperGui(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master, padx=12, pady=3)
 
         self.master = master
-        self.queue = queue.Queue()
+        self.queue = queue.initQueue()
 
         self.grid()
 
@@ -67,7 +67,7 @@ class FlipperGui(tk.Frame):
         if len(deckName) == 0:
             self.updateProgressLabel('Must give a deckname')
             return
-        self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName),kwargs={'queue':self.queue})
+        self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName))
         self.thread.start()
         self.disableInputs()
         self.updateProgressLabel('Generating....')

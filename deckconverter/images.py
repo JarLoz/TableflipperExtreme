@@ -2,12 +2,18 @@ import os
 import requests
 import shutil
 import subprocess
+from . import queue
 
 def downloadCardImages(processedDecklist):
     """
     Downloads the individual card images for a given processed decklist.
     """
+    imageNumber = 1
+    imageCount = len(processedDecklist)
     for processedCard in processedDecklist:
+        if queue.flipperQueue:
+            queue.flipperQueue.put('Downloading card ('+str(imageNumber)+'/'+str(imageCount)+')')
+        imageNumber += 1
         downloadCardImage(processedCard)
 
 def downloadCardImage(processedCard):

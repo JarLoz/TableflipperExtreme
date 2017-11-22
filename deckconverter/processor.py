@@ -1,5 +1,6 @@
 import re
 from . import scryfall
+from . import queue
 
 def processDecklist(decklist, reprint=False):
     """
@@ -10,7 +11,12 @@ def processDecklist(decklist, reprint=False):
     processedDecklistSideboard = []
     processedFlipCards = []
     sideboard = False
+    lineNumber = 1
+    lineCount = len(decklist)
     for line in decklist:
+        if queue.flipperQueue:
+            queue.flipperQueue.put('Processing line ('+str(lineNumber)+'/'+str(lineCount)+')')
+        lineNumber += 1
         # Checking if we are in sideboard territory.
         if line.strip().lower() == 'sideboard:':
             print('Switching to sideboard')

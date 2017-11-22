@@ -1,6 +1,6 @@
 from . import processor
 from . import images
-from deckconverter import scryfall
+from . import scryfall
 from gimgurpython import ImgurClient
 
 def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgur=None):
