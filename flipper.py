@@ -9,7 +9,10 @@ import re
 import os
 
 def initApp():
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    if getattr(sys, 'frozen', False) :
+        os.chdir(os.path.dirname(sys.executable))
+    else:
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 def main():
     initApp()
@@ -62,8 +65,8 @@ def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgu
         print('File ' + inputStr + ' not found!')
         queue.sendMessage({'type':'error', 'text':'File '+inputStr+' not found!'})
     except:
-        print('Error!')
-        queue.sendMessage({'type':'error', 'text':'Error!'})
+        queue.sendMessage({'type':'error', 'text':'Exception thrown, see console.'})
+        raise
 
 
 def getDecklist(inputStr):
