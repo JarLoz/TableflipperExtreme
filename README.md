@@ -15,6 +15,8 @@ Run `pip install -r requirements.txt`
 
 Run `python flipper.py -n <deckname> <decklist>`
 
+For a list of available options, run `python flipper.py --help`
+
 ## Usage
 
 TableflipperExtreme supports two ways of importing deck data: as plaintext files or from URLs. [Delicious example 8-Rack list](http://tappedout.net/mtg-decks/mono-black-8-rack-modern-discard/) created by The Professor from [Tolarian Community College](https://www.youtube.com/user/tolariancommunity).
@@ -110,6 +112,12 @@ By using the `--imgur` option, the app will upload the deck images to Imgur auto
 Now you can use the integration by simply adding the `--imgur` option:
 
     python flipper.py -n 8-Rack --imgur 8rack.txt
+
+## GUI
+
+While using graphical user interfaces is for the weak, there is a simple GUI provided with this application for those scared of the mighty CLI. To start the GUI, use the following command:
+
+    python flippergui.py
 
 ## Data sources and caching
 
