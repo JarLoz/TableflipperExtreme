@@ -12,6 +12,11 @@ class FlipperGui(tk.Frame):
     def __init__(self, master=None):
         super().__init__(master, padx=12, pady=3)
 
+        if getattr(sys, 'frozen', False) :
+            self.baseDir = os.path.dirname(sys.executable)
+        else:
+            self.baseDir = os.path.dirname(os.path.realpath(__file__))
+
         self.master = master
         self.queue = queue.initQueue()
 
@@ -112,14 +117,12 @@ class FlipperGui(tk.Frame):
         self.master.after(100, self.processQueue)
 
     def openFile(self):
-        currentdir = os.path.dirname(os.path.realpath(__file__))
-        filename = filedialog.askopenfilename(initialdir=currentdir,parent=self,title='Decklist')
+        filename = filedialog.askopenfilename(initialdir=self.baseDir,parent=self,title='Decklist')
         self.inputEntry.delete(0, tk.END)
         self.inputEntry.insert(0, filename)
 
     def openFolder(self):
-        currentdir = os.path.dirname(os.path.realpath(__file__))
-        dirname = filedialog.askdirectory(initialdir=currentdir,parent=self,title='Output directory')
+        dirname = filedialog.askdirectory(initialdir=self.baseDir,parent=self,title='Output directory')
         self.outputEntry.delete(0, tk.END)
         self.outputEntry.insert(0, dirname)
 

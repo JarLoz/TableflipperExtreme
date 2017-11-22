@@ -14,7 +14,10 @@ from gimgurpython.helpers.error import ImgurClientError
 import dropbox
 
 def initApp():
-    os.chdir(os.path.dirname(os.path.realpath(__file__)))
+    if getattr(sys, 'frozen', False) :
+        os.chdir(os.path.dirname(sys.executable))
+    else:
+        os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 def main():
     initApp()
@@ -114,7 +117,6 @@ def checkDropbox(dropboxToken):
         queue.sendMessage({'type':'error', 'text':'Problem with Dropbox integration'})
         return False
     return True
-
 
 def getDecklist(inputStr):
     """
