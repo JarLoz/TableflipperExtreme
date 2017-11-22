@@ -8,3 +8,8 @@ def initQueue():
         flipperQueue = queue.Queue()
 
     return flipperQueue
+
+def sendMessage(message):
+    global flipperQueue
+    if flipperQueue:
+        flipperQueue.put(message)

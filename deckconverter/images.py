@@ -12,7 +12,7 @@ def downloadCardImages(processedDecklist):
     imageCount = len(processedDecklist)
     for processedCard in processedDecklist:
         if queue.flipperQueue:
-            queue.flipperQueue.put('Downloading card ('+str(imageNumber)+'/'+str(imageCount)+')')
+            queue.flipperQueue.put({'type':'message','text':'Downloading card ('+str(imageNumber)+'/'+str(imageCount)+')'})
         imageNumber += 1
         downloadCardImage(processedCard)
 

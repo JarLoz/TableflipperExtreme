@@ -6,8 +6,13 @@ from deckconverter import queue
 import argparse
 import requests
 import re
+import os
+
+def initApp():
+    os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 def main():
+    initApp()
     parser = argparse.ArgumentParser()
     parser.add_argument('-n','--name', help='Name of the deck')
     parser.add_argument('--hires', help='Use high resolution versions of card images. Causes very large file sizes', action='store_true')
@@ -32,16 +37,22 @@ def main():
     generate(args.input, deckName, hires, reprint, nocache, imgur)
 
 def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgur=None):
-    decklist = getDecklist(inputStr)
+    try:
+        decklist = getDecklist(inputStr)
+        print('Processing decklist')
+        ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgur)
 
-    print('Processing decklist')
-    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgur)
+        with open(deckName+'.json', 'w',encoding='utf8') as outfile:
+            json.dump(ttsJson, outfile, indent=2)
+        queue.sendMessage({'type':'done'})
+        print('All done')
+    except FileNotFoundError:
+        print('File ' + inputStr + ' not found!')
+        queue.sendMessage({'type':'error', 'text':'File '+inputStr+' not found!'})
+    except:
+        print('Error!')
+        queue.sendMessage({'type':'error', 'text':'Error!'})
 
-    with open(deckName+'.json', 'w',encoding='utf8') as outfile:
-        json.dump(ttsJson, outfile, indent=2)
-    if queue.flipperQueue:
-        queue.flipperQueue.put('done')
-    print('All done')
 
 def getDecklist(inputStr):
     """

@@ -15,7 +15,7 @@ def processDecklist(decklist, reprint=False):
     lineCount = len(decklist)
     for line in decklist:
         if queue.flipperQueue:
-            queue.flipperQueue.put('Processing line ('+str(lineNumber)+'/'+str(lineCount)+')')
+            queue.flipperQueue.put({'type':'message','text':'Processing line ('+str(lineNumber)+'/'+str(lineCount)+')'})
         lineNumber += 1
         # Checking if we are in sideboard territory.
         if line.strip().lower() == 'sideboard:':
