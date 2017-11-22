@@ -117,8 +117,9 @@ def callMontage(imageNames, deckImageName, hires, output=''):
     """
     Calls the external montage tool from Imagemagick package to do the image composition.
     """
+    montagePath = os.path.join('imagemagick', 'montage.exe')
     imagePath = os.path.join(output, deckImageName)
     if (hires):
-        subprocess.call(['montage'] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', imagePath])
+        subprocess.call([montagePath] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', imagePath])
     else:
-        subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', imagePath])
+        subprocess.call([montagePath] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', imagePath])
