@@ -6,7 +6,7 @@ from gimgurpython import ImgurClient
 import dropbox
 import os
 
-def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgurId=None, output=''):
+def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgurId=None, dropboxToken=None, output=''):
     """
     Converts a given decklist to the JSON format used by Tabletop Simulator, as well
     as generating the required images. The decklist is assumed to be a list of strings.
@@ -21,17 +21,17 @@ def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, img
 
     deckObjects = []
     posX = 0.0
-    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, imgurId=imgurId, output=output))
+    deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, imgurId=imgurId, dropboxToken=dropboxToken, output=output))
     posX += 4.0
     if (processedDecklistSideboard):
-        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklistSideboard, deckName+'-sideboard', posX, hires, imgurId=imgurId, output=output))
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedDecklistSideboard, deckName+'-sideboard', posX, hires, imgurId=imgurId, dropboxToken=dropboxToken, output=output))
         posX += 4.0
     if (processedExtraCards):
-        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX, hires, doubleSided=True, imgurId=imgurId, output=output))
+        deckObjects.append(generateDeckObjectFromProcessedDecklist(processedExtraCards, deckName+'-extra', posX, hires, doubleSided=True, imgurId=imgurId, dropboxToken=dropboxToken, output=output))
 
     return {'ObjectStates':deckObjects}
 
-def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, doubleSided=False, imgurId=None, output=''):
+def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, doubleSided=False, imgurId=None, dropboxToken=None, output=''):
     """
     Downloads the cards and creates the TTS deck object for a given processed decklist.
     """
@@ -40,7 +40,7 @@ def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, h
     print('Creating deck images')
     deckImageNames = images.createDeckImages(processedDecklist, deckName, hires, doubleSided, output)
     print('Creating deck object')
-    deckObject = createDeckObject(processedDecklist, deckName, deckImageNames, posX, output, imgurId)
+    deckObject = createDeckObject(processedDecklist, deckName, deckImageNames, posX, output, imgurId, dropboxToken)
     if imgurId:
         print('Deleting local deck images')
         for deckImageName in deckImageNames:

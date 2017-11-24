@@ -51,33 +51,48 @@ class FlipperGui(tk.Frame):
 
         self.imgurEntry = tk.Entry(self, width=60)
         self.imgurEntry.grid(row=4, column=1, columnspan=3, sticky=tk.W)
-        savedEntry = self.loadImgurId()
-        if savedEntry:
-            self.imgurEntry.insert(0,savedEntry)
+        savedImgurId = self.loadImgurId()
+        if savedImgurId:
+            self.imgurEntry.insert(0,savedImgurId)
         self.imgurEntry.config(state='disabled')
+
+        self.dropboxLabel = tk.Label(self, text='Dropbox Token(optional)')
+        self.dropboxLabel.grid(row=5, column=0, sticky=tk.W)
+
+        self.dropboxEntry = tk.Entry(self, width=60)
+        self.dropboxEntry.grid(row=5, column=1, columnspan=3, sticky=tk.W)
+        savedDropboxToken = self.loadDropboxToken()
+        if savedDropboxToken:
+            self.dropboxEntry.insert(0,savedDropboxToken)
+        self.dropboxEntry.config(state='disabled')
 
         self.hiresVar = tk.IntVar()
         self.hiresCheckbutton = tk.Checkbutton(self, text='High Resolution', variable=self.hiresVar)
-        self.hiresCheckbutton.grid(row=5, column=0, sticky=tk.W)
+        self.hiresCheckbutton.grid(row=6, column=0, sticky=tk.W)
 
         self.reprintsVar = tk.IntVar()
         self.reprintsCheckbutton = tk.Checkbutton(self, text='Reprints', variable=self.reprintsVar)
-        self.reprintsCheckbutton.grid(row=5, column=1, sticky=tk.W)
+        self.reprintsCheckbutton.grid(row=6, column=1, sticky=tk.W)
 
         self.nocacheVar = tk.IntVar()
         self.nocacheCheckbutton = tk.Checkbutton(self, text='No cache', variable=self.nocacheVar)
-        self.nocacheCheckbutton.grid(row=5, column=2, sticky=tk.W)
+        self.nocacheCheckbutton.grid(row=6, column=2, sticky=tk.W)
 
         self.imgurVar = tk.IntVar()
         self.imgurCheckbutton = tk.Checkbutton(self, text='Imgur Upload', variable=self.imgurVar)
-        self.imgurCheckbutton.grid(row=5, column=3, sticky=tk.W)
+        self.imgurCheckbutton.grid(row=6, column=3, sticky=tk.W)
         self.imgurVar.trace('w', self.imgurVarCallback)
 
+        self.dropboxVar = tk.IntVar()
+        self.dropboxCheckbutton = tk.Checkbutton(self, text='Dropbox Upload', variable=self.dropboxVar)
+        self.dropboxCheckbutton.grid(row=6, column=4, sticky=tk.W)
+        self.dropboxVar.trace('w', self.dropboxVarCallback)
+
         self.progressLabel = tk.Label(self, text='Ready')
-        self.progressLabel.grid(row=6, column=0, columnspan=4, sticky=tk.W)
+        self.progressLabel.grid(row=7, column=0, columnspan=4, sticky=tk.W)
 
         self.generateButton = tk.Button(self, text='Generate', command=self.generate)
-        self.generateButton.grid(row=6, column=4, sticky=tk.E)
+        self.generateButton.grid(row=7, column=4, sticky=tk.E)
 
         self.processQueue()
 
@@ -127,10 +142,17 @@ class FlipperGui(tk.Frame):
                 return
         else:
             imgurId = None
+        if self.dropboxVar.get():
+            dropboxToken = self.dropboxEntry.get()
+            if len(dropboxToken) == 0:
+                self.updateProgressLabel('Must have Dropbox Token', fg='red')
+                return
+        else:
+            dropboxToken = None
         hires = bool(self.hiresVar.get())
         reprints = bool(self.reprintsVar.get())
         nocache = bool(self.nocacheVar.get())
-        self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName, hires, reprints, nocache, imgurId, outputFolder))
+        self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName, hires, reprints, nocache, imgurId, dropboxToken, outputFolder))
         self.thread.start()
         self.disableInputs()
         self.updateProgressLabel('Generating....')
@@ -148,6 +170,7 @@ class FlipperGui(tk.Frame):
         self.nocacheCheckbutton.config(state='disabled')
         self.imgurCheckbutton.config(state='disabled')
         self.imgurEntry.config(state='disabled')
+        self.dropboxEntry.config(state='disabled')
 
     def enableInputs(self):
         self.inputEntry.config(state='normal')
@@ -163,6 +186,7 @@ class FlipperGui(tk.Frame):
         self.imgurCheckbutton.config(state='normal')
 
         self.updateImgurEntry()
+        self.updateDropboxEntry()
 
     def imgurVarCallback(self, name, index, mode):
         self.updateImgurEntry()
@@ -173,6 +197,16 @@ class FlipperGui(tk.Frame):
             self.imgurEntry.config(state='normal')
         else:
             self.imgurEntry.config(state='disabled')
+
+    def dropboxVarCallback(self, name, index, mode):
+        self.updateDropboxEntry()
+
+    def updateDropboxEntry(self):
+        dropbox = bool(self.dropboxVar.get())
+        if dropbox:
+            self.dropboxEntry.config(state='normal')
+        else:
+            self.dropboxEntry.config(state='disabled')
 
     def updateProgressLabel(self, message, fg='black'):
         self.progressLabel['text'] = message
@@ -187,6 +221,18 @@ class FlipperGui(tk.Frame):
     def loadImgurId(self):
         if os.path.isfile('imgurId.txt'):
             with open('imgurId.txt','r') as infile:
+                return infile.read().strip()
+        return None
+
+    def saveDropboxToken(self):
+        if self.dropboxVar.get():
+            dropboxToken = self.dropboxEntry.get()
+            with open('dropboxToken.txt', 'w') as outfile:
+                outfile.write(dropboxToken)
+
+    def loadDropboxToken(self):
+        if os.path.isfile('dropboxToken.txt'):
+            with open('dropboxToken.txt','r') as infile:
                 return infile.read().strip()
         return None
 

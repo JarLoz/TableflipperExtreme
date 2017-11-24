@@ -11,6 +11,7 @@ import os
 import subprocess
 from gimgurpython import ImgurClient
 from gimgurpython.helpers.error import ImgurClientError
+import dropbox
 
 def initApp():
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -24,6 +25,7 @@ def main():
     parser.add_argument('--reprints', help='Use the latest reprints of the cards', action='store_true')
     parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_true')
     parser.add_argument('--imgur', help='Imgur client ID for Imgur integration. See README.md for details')
+    parser.add_argument('--dropbox', help='Dropbox oAuth2 token for Dropbox integration.')
     parser.add_argument('input', help='Filename or URL of the decklist')
     args = parser.parse_args()
 
@@ -35,6 +37,7 @@ def main():
     reprint = args.reprints
     nocache = args.nocache
     imgur = args.imgur
+    dropbox = args.dropbox
     output = args.output
     if output == None:
         output = ''
@@ -42,9 +45,9 @@ def main():
         print('Output path not valid! Path: '+output)
         return
 
-    generate(args.input, deckName, hires, reprint, nocache, imgur, output)
+    generate(args.input, deckName, hires, reprint, nocache, imgur, dropbox, output)
 
-def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgurId=None, output=''):
+def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgurId=None, dropboxToken=None,output=''):
 
     # Let's see if Imagemagick is installed
     if not checkMontage():
@@ -52,6 +55,9 @@ def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgu
 
     # Let's see if Imgur integration is functioning
     if imgurId and not checkImgur(imgurId):
+        return
+
+    if dropboxToken and not checkDropbox(dropboxToken):
         return
 
     decklist = getDecklist(inputStr)
@@ -96,6 +102,16 @@ def checkImgur(imgurId):
     except ImgurClientError:
         print('Imgur client information incorrect')
         queue.sendMessage({'type':'error', 'text':'Imgur client ID wrong. See README for details.'})
+        return False
+    return True
+
+def checkDropbox(dropboxToken):
+    try:
+        dbx = dropbox.Dropbox(dropboxToken)
+        dbx.users_get_current_account()
+    except:
+        print('Problem with dropbox integration')
+        queue.sendMessage({'type':'error', 'text':'Problem with Dropbox integration'})
         return False
     return True
 
