@@ -4,6 +4,7 @@ import sys
 import os
 import flipper
 import threading
+from queue import Queue
 from deckconverter import queue
 from PIL import ImageTk, Image
 
@@ -24,65 +25,74 @@ class FlipperGui(tk.Frame):
         self.deckNameLabel.grid(row=1, column=0, sticky=tk.W)
 
         self.deckNameEntry = tk.Entry(self, width=60)
-        self.deckNameEntry.grid(row=1, column=1, columnspan=3)
+        self.deckNameEntry.grid(row=1, column=1, columnspan=3, stick=tk.W)
         self.deckNameEntry.insert(0,'Deck')
 
         self.inputLabel = tk.Label(self, text='File or URL')
         self.inputLabel.grid(row=2, column=0, sticky=tk.W)
 
         self.inputEntry = tk.Entry(self, width=60)
-        self.inputEntry.grid(row=2, column=1, columnspan=3)
+        self.inputEntry.grid(row=2, column=1, columnspan=3, sticky=tk.W)
 
         self.inputButton = tk.Button(self, text='Browse', command=self.openFile)
         self.inputButton.grid(row=2, column=4, sticky=tk.E)
 
-        self.outputLabel = tk.Label(self, text='Output folder')
+        self.outputLabel = tk.Label(self, text='Output folder (optional)')
         self.outputLabel.grid(row=3, column=0, sticky=tk.W)
 
         self.outputEntry = tk.Entry(self, width=60)
-        self.outputEntry.grid(row=3, column=1, columnspan=3)
+        self.outputEntry.grid(row=3, column=1, columnspan=3, sticky=tk.W)
 
         self.outputButton = tk.Button(self, text='Browse', command=self.openFolder)
         self.outputButton.grid(row=3, column=4, sticky=tk.E)
 
+        self.imgurLabel = tk.Label(self, text='ImgurID (optional)')
+        self.imgurLabel.grid(row=4, column=0, sticky=tk.W)
+
+        self.imgurEntry = tk.Entry(self, width=60)
+        self.imgurEntry.grid(row=4, column=1, columnspan=3, sticky=tk.W)
+        savedEntry = self.loadImgurId()
+        if savedEntry:
+            self.imgurEntry.insert(0,savedEntry)
+        self.imgurEntry.config(state='disabled')
+
         self.hiresVar = tk.IntVar()
         self.hiresCheckbutton = tk.Checkbutton(self, text='High Resolution', variable=self.hiresVar)
-        self.hiresCheckbutton.grid(row=4, column=0, sticky=tk.W)
+        self.hiresCheckbutton.grid(row=5, column=0, sticky=tk.W)
 
         self.reprintsVar = tk.IntVar()
         self.reprintsCheckbutton = tk.Checkbutton(self, text='Reprints', variable=self.reprintsVar)
-        self.reprintsCheckbutton.grid(row=4, column=1, sticky=tk.W)
+        self.reprintsCheckbutton.grid(row=5, column=1, sticky=tk.W)
 
         self.nocacheVar = tk.IntVar()
         self.nocacheCheckbutton = tk.Checkbutton(self, text='No cache', variable=self.nocacheVar)
-        self.nocacheCheckbutton.grid(row=4, column=2, sticky=tk.W)
+        self.nocacheCheckbutton.grid(row=5, column=2, sticky=tk.W)
 
         self.imgurVar = tk.IntVar()
         self.imgurCheckbutton = tk.Checkbutton(self, text='Imgur Upload', variable=self.imgurVar)
-        self.imgurCheckbutton.grid(row=4, column=3, sticky=tk.W)
+        self.imgurCheckbutton.grid(row=5, column=3, sticky=tk.W)
+        self.imgurVar.trace('w', self.imgurVarCallback)
 
         self.progressLabel = tk.Label(self, text='Ready')
-        self.progressLabel.grid(row=5, column=0, columnspan=4, sticky=tk.W)
+        self.progressLabel.grid(row=6, column=0, columnspan=4, sticky=tk.W)
 
         self.generateButton = tk.Button(self, text='Generate', command=self.generate)
-        self.generateButton.grid(row=5, column=4, sticky=tk.E)
+        self.generateButton.grid(row=6, column=4, sticky=tk.E)
 
         self.processQueue()
 
     def processQueue(self):
         while self.queue.qsize():
-            try:
-                msg = self.queue.get(0)
-                if msg['type'] == 'done':
-                    self.enableInputs()
-                    self.updateProgressLabel('All done!')
-                elif msg['type'] == 'error':
-                    self.enableInputs()
-                    self.updateProgressLabel(msg['text'], fg='red')
-                elif msg['type'] == 'message':
-                    self.updateProgressLabel(msg['text'])
-            except Queue.Empty:
-                pass
+            msg = self.queue.get(0)
+            if msg['type'] == 'done':
+                self.saveImgurId()
+                self.enableInputs()
+                self.updateProgressLabel('All done!')
+            elif msg['type'] == 'error':
+                self.enableInputs()
+                self.updateProgressLabel(msg['text'], fg='red')
+            elif msg['type'] == 'message':
+                self.updateProgressLabel(msg['text'])
         self.master.after(100, self.processQueue)
 
     def openFile(self):
@@ -110,11 +120,17 @@ class FlipperGui(tk.Frame):
         if len(outputFolder) and not os.path.isdir(outputFolder):
             self.updateProgressLabel('Output folder must exist', fg='red')
             return
+        if self.imgurVar.get():
+            imgurId = self.imgurEntry.get()
+            if len(imgurId) == 0:
+                self.updateProgressLabel('Must have ImgurID', fg='red')
+                return
+        else:
+            imgurId = None
         hires = bool(self.hiresVar.get())
         reprints = bool(self.reprintsVar.get())
         nocache = bool(self.nocacheVar.get())
-        imgur = bool(self.imgurVar.get())
-        self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName, hires, reprints, nocache, imgur, outputFolder))
+        self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName, hires, reprints, nocache, imgurId, outputFolder))
         self.thread.start()
         self.disableInputs()
         self.updateProgressLabel('Generating....')
@@ -131,6 +147,7 @@ class FlipperGui(tk.Frame):
         self.reprintsCheckbutton.config(state='disabled')
         self.nocacheCheckbutton.config(state='disabled')
         self.imgurCheckbutton.config(state='disabled')
+        self.imgurEntry.config(state='disabled')
 
     def enableInputs(self):
         self.inputEntry.config(state='normal')
@@ -145,10 +162,33 @@ class FlipperGui(tk.Frame):
         self.nocacheCheckbutton.config(state='normal')
         self.imgurCheckbutton.config(state='normal')
 
+        self.updateImgurEntry()
+
+    def imgurVarCallback(self, name, index, mode):
+        self.updateImgurEntry()
+
+    def updateImgurEntry(self):
+        imgur = bool(self.imgurVar.get())
+        if imgur:
+            self.imgurEntry.config(state='normal')
+        else:
+            self.imgurEntry.config(state='disabled')
+
     def updateProgressLabel(self, message, fg='black'):
         self.progressLabel['text'] = message
         self.progressLabel['fg'] = fg
 
+    def saveImgurId(self):
+        if self.imgurVar.get():
+            imgurId = self.imgurEntry.get()
+            with open('imgurId.txt', 'w') as outfile:
+                outfile.write(imgurId)
+
+    def loadImgurId(self):
+        if os.path.isfile('imgurId.txt'):
+            with open('imgurId.txt','r') as infile:
+                return infile.read().strip()
+        return None
 
 def main():
     flipper.initApp()

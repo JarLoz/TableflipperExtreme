@@ -3,10 +3,14 @@ import json
 from deckconverter import converter 
 from deckconverter import scryfall
 from deckconverter import queue
+from deckconverter import images
 import argparse
 import requests
 import re
 import os
+import subprocess
+from gimgurpython import ImgurClient
+from gimgurpython.helpers.error import ImgurClientError
 
 def initApp():
     os.chdir(os.path.dirname(os.path.realpath(__file__)))
@@ -19,7 +23,7 @@ def main():
     parser.add_argument('--hires', help='Use high resolution versions of card images. Causes very large file sizes', action='store_true')
     parser.add_argument('--reprints', help='Use the latest reprints of the cards', action='store_true')
     parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_true')
-    parser.add_argument('--imgur', help='Imgur integration. Requires imgurInfo.json', action='store_true')
+    parser.add_argument('--imgur', help='Imgur client ID for Imgur integration. See README.md for details')
     parser.add_argument('input', help='Filename or URL of the decklist')
     args = parser.parse_args()
 
@@ -40,30 +44,60 @@ def main():
 
     generate(args.input, deckName, hires, reprint, nocache, imgur, output)
 
-def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgur=False, output=''):
+def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgurId=None, output=''):
+
+    # Let's see if Imagemagick is installed
+    if not checkMontage():
+        return
+
+    # Let's see if Imgur integration is functioning
+    if imgurId and not checkImgur(imgurId):
+        return
+
+    decklist = getDecklist(inputStr)
+    if decklist == None:
+        return
+
     print('Processing decklist')
+    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurId, output)
+    ttsJsonFilename = os.path.join(output, deckName+'.json')
+    with open(ttsJsonFilename, 'w',encoding='utf8') as outfile:
+        json.dump(ttsJson, outfile, indent=2)
+    queue.sendMessage({'type':'done'})
+    print('All done')
+
+def checkMontage():
     try:
-        imgurInfo = None
-        if (imgur):
-            if (os.path.isfile('imgurInfo.json') == False):
-                print('imgurInfo.json missing!')
-                queue.sendMessage({'type':'error', 'text':'imgurInfo.json missing!'})
-                return
-            with open('imgurInfo.json', encoding='utf8') as imgurInfoFile:
-                imgurInfo = json.load(imgurInfoFile)
-        decklist = getDecklist(inputStr)
-        ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurInfo, output)
-        ttsJsonFilename = os.path.join(output, deckName+'.json')
-        with open(ttsJsonFilename, 'w',encoding='utf8') as outfile:
-            json.dump(ttsJson, outfile, indent=2)
-        queue.sendMessage({'type':'done'})
-        print('All done')
+        returnVal = subprocess.call(['montage', '--version'])
+        if returnVal == 0:
+            images.setMontagePath('montage')
+            return True
     except FileNotFoundError:
-        print('File ' + inputStr + ' not found!')
-        queue.sendMessage({'type':'error', 'text':'File '+inputStr+' not found!'})
-    except:
-        print('Error!')
-        queue.sendMessage({'type':'error', 'text':'Error!'})
+        pass
+
+    #Global montage not found, let's try to find the bundled version.
+
+    try:
+        montagePath = os.path.join('imagemagick', 'montage')
+        returnVal = subprocess.call([montagePath, '--version'])
+        if returnVal == 0:
+            images.setMontagePath(montagePath)
+            return True
+    except FileNotFoundError:
+        pass
+
+    print('Imagemagick not found!')
+    queue.sendMessage({'type':'error', 'text':'Imagemagick not found!'})
+    return False
+
+def checkImgur(imgurId):
+    try:
+        client = ImgurClient(imgurId, '')
+    except ImgurClientError:
+        print('Imgur client information incorrect')
+        queue.sendMessage({'type':'error', 'text':'Imgur client ID wrong. See README for details.'})
+        return False
+    return True
 
 
 def getDecklist(inputStr):
@@ -87,13 +121,20 @@ def getDecklist(inputStr):
             decklist = response.text.split('\n')
         else:
             print('Input URL must be to either to https://deckbox.org or http://tappedout.net.')
+            queue.sendMessage({'type':'error', 'text':'Input URL must be either to https://deckbox.org or http://tappedout.net'})
+            return None
         del response
         return decklist
     else:
         print('Generating from file ' +  inputStr)
-        with open(inputStr,encoding='utf8') as decklistfile:
-            decklist = decklistfile.readlines()
-        return decklist
+        try:
+            with open(inputStr,encoding='utf8') as decklistfile:
+                decklist = decklistfile.readlines()
+            return decklist
+        except FileNotFoundError:
+            print('File ' + inputStr + ' not found!')
+            queue.sendMessage({'type':'error', 'text':'File '+inputStr+' not found!'})
+            return None
 
 if __name__ == '__main__':
     sys.exit(main())

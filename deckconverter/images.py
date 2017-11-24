@@ -4,6 +4,12 @@ import shutil
 import subprocess
 from . import queue
 
+montagePath = None
+
+def setMontagePath(path):
+    global montagePath
+    montagePath = path
+
 def downloadCardImages(processedDecklist):
     """
     Downloads the individual card images for a given processed decklist.
@@ -117,8 +123,9 @@ def callMontage(imageNames, deckImageName, hires, output=''):
     """
     Calls the external montage tool from Imagemagick package to do the image composition.
     """
+    global montagePath
     imagePath = os.path.join(output, deckImageName)
     if (hires):
-        subprocess.call(['montage'] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', imagePath])
+        subprocess.call([montagePath] + imageNames + ['-geometry', '100%x100%+0+0', '-tile', '10x7', imagePath])
     else:
-        subprocess.call(['montage'] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', imagePath])
+        subprocess.call([montagePath] + imageNames + ['-geometry', '50%x50%+0+0', '-tile', '10x7', imagePath])
