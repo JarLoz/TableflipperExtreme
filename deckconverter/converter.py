@@ -3,6 +3,7 @@ from . import images
 from . import scryfall
 from . import queue
 from gimgurpython import ImgurClient
+import dropbox
 import os
 
 def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgurId=None, output=''):
@@ -49,7 +50,7 @@ def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, h
     return deckObject
 
 
-def createDeckObject(processedDecklist, deckName, deckImageNames, posX, output='', imgurId=None):
+def createDeckObject(processedDecklist, deckName, deckImageNames, posX, output='', imgurId=None, dropboxToken=None):
     """
     Creates a TTS deck object from a given processed decklist.
     """
@@ -71,12 +72,12 @@ def createDeckObject(processedDecklist, deckName, deckImageNames, posX, output='
     customDeckIndex = 1
     for deckImageName in deckImageNames:
 
-        faceUrl = getDeckUrl(deckImageName[0], imgurId, output)
+        faceUrl = getDeckUrl(deckImageName[0], output, imgurId, dropboxToken)
 
         uniqueBack = False
         if len(deckImageName) == 2:
             uniqueBack = True
-            backUrl = getDeckUrl(deckImageName[1], imgurId, output)
+            backUrl = getDeckUrl(deckImageName[1], output, imgurId, dropboxToken)
         else:
             backUrl = 'https://i.imgur.com/P7qYTcI.png'
 
@@ -85,11 +86,12 @@ def createDeckObject(processedDecklist, deckName, deckImageNames, posX, output='
     deckObject['CustomDeck'] = customDeck
     return deckObject
 
-def getDeckUrl(deckImage, imgurId, output):
+def getDeckUrl(deckImage, output, imgurId, dropboxToken):
+    if (dropboxToken):
+        return uploadToDropbox(deckImage, imgurId, output)
     if (imgurId):
         return uploadToImgur(deckImage, imgurId, output)
-    else:
-        return '<REPLACE WITH URL TO ' + deckImage + '>'
+    return '<REPLACE WITH URL TO ' + deckImage + '>'
 
 def uploadToImgur(deckImage, imgurId, output):
     imagePath = os.path.join(output, deckImage)
@@ -100,3 +102,14 @@ def uploadToImgur(deckImage, imgurId, output):
         response = client.upload(imageFp)
     return response['link']
 
+def uploadToDropbox(deckImage, dropboxToken, output):
+    imagePath = os.path.join(output, deckImage)
+    print('Uploading file ' + deckImage + ' to Dropbox!')
+    queue.sendMessage({'type':'message', 'text':'Uploading file ' + deckImage + ' to Dropbox!'})
+    dbx = dropbox.Dropbox(dropboxToken)
+    with open(imagePath, 'rb') as imageFp:
+        data = imageFp.read()
+    dropboxPath = '/'+deckImage
+    dbx.files_upload(data, dropboxPath)
+    share = dbx.sharing_create_shared_link(dropboxPath)
+    return share.url.replace('dl=0','raw=1')

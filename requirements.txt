@@ -1,8 +1,15 @@
+altgraph==0.14
 certifi==2017.11.5
 chardet==3.0.4
+dropbox==8.5.0
+future==0.16.0
 gimgurpython==0.0.4
 idna==2.6
+macholib==1.8
 olefile==0.44
+pefile==2017.11.5
 Pillow==4.3.0
+PyInstaller==3.3
 requests==2.18.4
+six==1.11.0
 urllib3==1.22
