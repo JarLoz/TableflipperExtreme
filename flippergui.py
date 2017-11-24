@@ -101,6 +101,7 @@ class FlipperGui(tk.Frame):
             msg = self.queue.get(0)
             if msg['type'] == 'done':
                 self.saveImgurId()
+                self.saveDropboxToken()
                 self.enableInputs()
                 self.updateProgressLabel('All done!')
             elif msg['type'] == 'error':

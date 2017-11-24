@@ -88,7 +88,7 @@ def createDeckObject(processedDecklist, deckName, deckImageNames, posX, output='
 
 def getDeckUrl(deckImage, output, imgurId, dropboxToken):
     if (dropboxToken):
-        return uploadToDropbox(deckImage, imgurId, output)
+        return uploadToDropbox(deckImage, dropboxToken, output)
     if (imgurId):
         return uploadToImgur(deckImage, imgurId, output)
     return '<REPLACE WITH URL TO ' + deckImage + '>'

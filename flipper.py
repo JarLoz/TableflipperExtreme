@@ -65,7 +65,7 @@ def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgu
         return
 
     print('Processing decklist')
-    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurId, output)
+    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurId, dropboxToken, output)
     ttsJsonFilename = os.path.join(output, deckName+'.json')
     with open(ttsJsonFilename, 'w',encoding='utf8') as outfile:
         json.dump(ttsJson, outfile, indent=2)
