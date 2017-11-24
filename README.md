@@ -72,9 +72,11 @@ This works with deckbox.org URLs aswell.
 
 ## Getting the results into Tabletop Simulator
 
-The application will generate a number of files for your deck. There will be a \<deckname\>.json file, as well as a number of \<deckname\>\_image\_#.jpg files. The image files contain the card faces for your deck. You will need to find a way to upload these to some publicly available host, such as Imgur or Dropbox, and then edit the .json file to point to these hosted files. In the .json file you will find lines such as `"FaceUrl": "<REPLACE WITH URL TO imagename.jpg>"`. (Ctrl-F will be your friend here). Change these to `"FaceUrl":"https://imgur.com/imagename.jpg"`.
+The application will generate a number of files for your deck. There will be a \<deckname\>.json file, as well as a number of \<deckname\>\_image\_#.jpg files. The image files contain the card faces for your deck. You will need to find a way to upload these to some publicly available host, such as Dropbox, and then edit the .json file to point to these hosted files. In the .json file you will find lines such as `"FaceUrl": "<REPLACE WITH URL TO imagename.jpg>"`. (Ctrl-F will be your friend here). Change these to `"FaceUrl":"https://example.com/imagename.jpg"`.
 
 Once this is done, you can drop the .json file in your Tabletop Simulator Saved Objects folder.
+
+If you do not want to be bothered with this, you can use the Imgur integration, detailed below. However, the image quality will be degraded considerably by Imgur's automatic compression.
 
 ## Resolution
 
@@ -104,21 +106,21 @@ You can even mix your custom cards with normal cards, but in this case make sure
 
 ## Imgur integration
 
-Note: this is an experimental feature for advanced users. 
+By using the `--imgur` option, the app will upload the deck images to Imgur automatically, bypassing the need to upload and edit the deck JSON files yourself. However, Imgur requires all clients using their API to register and supply the credentials given to them, namely the `client_id`. You can generate your own API credentials from here: [Add Client - Imgur](https://api.imgur.com/oauth2/addclient).
 
-By using the `--imgur` option, the app will upload the deck images to Imgur automatically, bypassing the need to upload and edit the deck JSON files yourself. However, Imgur requires all clients using their API to register and supply the credentials given to them, namely the `client_id` and `client_secret`. You can generate your own API credentials from here: [Add Client - Imgur](https://api.imgur.com/oauth2/addclient). Once you have the Client ID and Client Secret, edit the file called imgurInfo.json in the application folder, and put your credentials in it:
+Now you can use the integration by simply adding the `--imgur` option, followed by your client id.
 
-	{'client_id':'EXAMPLECLIENTID123','client_secret':'EXAMPLECLIENTSECRET123'}
+    python flipper.py -n 8-Rack --imgur MYFAKECLIENTID123 8rack.txt
 
-Now you can use the integration by simply adding the `--imgur` option:
-
-    python flipper.py -n 8-Rack --imgur 8rack.txt
+Note, that the images are automatically removed from your computer after upload to Imgur.
 
 ## GUI
 
 While using graphical user interfaces is for the weak, there is a simple GUI provided with this application for those scared of the mighty CLI. To start the GUI, use the following command:
 
     python flippergui.py
+
+All of the options for the CLI application have entries in the GUI, and their usage is similar. If you use the Imgur integration through the GUI, your client id will be saved to a file called `imgurId.txt` in the application root directory.
 
 ## Data sources and caching
 
