@@ -2,7 +2,7 @@
 
 This is Tableflipper Extreme, a MTG deck creator for Tabletop Simulator. It eats decklists from files or directly from tappedout.net and deckbox.org, and outputs files you can import to Tabletop Simulator.
 
-The application will always use the oldest possible printing of a card, disregarding promo printings, with the exception of basic lands, which are always Guru lands. For those willing, there is an option to use the latest reprintings of cards, or even specific printings. See the `--reprint` option as well as the section about adding scryfall URLS to plaintext decklists.
+The application will always use the oldest possible printing of a card, disregarding promo printings, exception of basic lands, which are by default Guru lands, but can be also configured to a handful of other sets. For those willing, there is an option to use the latest reprintings of cards, or even specific printings. See the `--reprint` option as well as the section about adding scryfall URLS to plaintext decklists.
 
 This project was started because using online converters such as frogtown.me are a pain in the ass. This one is too, but not to me.
 
@@ -90,6 +90,22 @@ While I personally enjoy the style of older magic cards, there is an option to u
 
     python flipper.py -n 8-Rack --reprint 8rack.txt
 
+## Basics
+
+By default, Tableflipper Extreme uses Guru basics. However, by using the `--basic` option, the application can also be configured to use other basic lands. Allowed options are: 
+
+`guru`: These are the default premium lands by Terese Nielsen.
+
+`unstable`: New full art lands from the Unstable set, by John Avon.
+
+`alpha`: From the original Limited Edition Alpha set, by various artists.
+
+`core`: For those looking for something understated, the cycle of basics from 10th edition, by John Avon.
+
+Using the option is simple:
+
+    python flipper.py -n 8-Rack --basic unstable 8rack.txt
+
 ## Custom cards
 
 Creating custom magic cards is fun! Having been inspired by the incredible [Urza's Dream Engine](http://andymakes.com/urzasdreamengine/), I added support for custom cards in Tableflipper Extreme. By adding filenames to your decklist, you can create cards from custom images. For example, let's assume a `decklist.txt` file containing the following:
@@ -112,7 +128,15 @@ Now you can use the integration by simply adding the `--imgur` option, followed 
 
     python flipper.py -n 8-Rack --imgur MYFAKECLIENTID123 8rack.txt
 
-Note, that the images are automatically removed from your computer after upload to Imgur.
+Note that the images are automatically removed from your computer after upload to Imgur.
+
+## Dropbox integration
+
+Similarly to the `--imgur` option, using `--dropbox` option will upload the deck images automatically to Dropbox for hosting. In order to use this option, you will first need to have an active Dropbox account. Then, head to [Developers - Dropbox](https://www.dropbox.com/developers/apps/create) and create a new Dropbox app. For sensible options, choose "Dropbox API" and "Full Dropbox", and give your app a snazzy name. Click "Create", and in the next page, look for the section "Generated access token". Click the "Generate" button, and copy the given token. This is the token you need to supply to Tableflipper Extreme in order to use the integration:
+
+    python flipper.py -n 8-Rack --dropbox MYFAKEDROPBOXACCESSTOKEN123123123 8rack.txt
+
+Note that the images are automatically removed from your computer after upload to Dropbox.
 
 ## GUI
 
