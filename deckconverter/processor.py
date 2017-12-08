@@ -125,6 +125,7 @@ def generateProcessedCardEntryFromCardInfo(cardInfo, cardName=None):
         extraCardEntry['image_urls'] = [frontFaceUrl, backFaceUrl]
         return (cardEntry, [extraCardEntry])
 
+    cardEntry['image_url'] = stripUselessNumbers(cardInfo['image_uris']['large'])
     return (cardEntry, [])
 
 def stripUselessNumbers(url):
