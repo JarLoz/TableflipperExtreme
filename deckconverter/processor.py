@@ -2,7 +2,37 @@ import re
 from . import scryfall
 from . import queue
 
-def processDecklist(decklist, reprint=False):
+basics = {
+        'guru':{
+            'forest': {'name':'Forest','set':'pgru','number':'1'},
+            'island': {'name':'Island','set':'pgru','number':'2'},
+            'mountain': {'name':'Mountain','set':'pgru','number':'3'},
+            'plains': {'name':'Plains','set':'pgru','number':'4'},
+            'swamp': {'name':'Swamp','set':'pgru','number':'5'}
+            },
+        'unstable':{
+            'forest': {'name':'Forest','set':'ust','number':'216'},
+            'island': {'name':'Island','set':'ust','number':'213'},
+            'mountain': {'name':'Mountain','set':'ust','number':'215'},
+            'plains': {'name':'Plains','set':'ust','number':'212'},
+            'swamp': {'name':'Swamp','set':'ust','number':'214'}
+            },
+        'alpha':{
+            'forest': {'name':'Forest','set':'lea','number':'294'},
+            'island': {'name':'Island','set':'lea','number':'288'},
+            'mountain': {'name':'Mountain','set':'lea','number':'292'},
+            'plains': {'name':'Plains','set':'lea','number':'286'},
+            'swamp': {'name':'Swamp','set':'lea','number':'290'}
+            },
+        'core':{
+            'forest': {'name':'Forest','set':'10e','number':'381'},
+            'island': {'name':'Island','set':'10e','number':'369'},
+            'mountain': {'name':'Mountain','set':'10e','number':'376'},
+            'plains': {'name':'Plains','set':'10e','number':'365'},
+            'swamp': {'name':'Swamp','set':'10e','number':'372'}
+            }
+        }
+def processDecklist(decklist, reprint=False, basicSet=None):
     """
     Processes a given decklist into a "processed decklist" form. This processed form is a list of maps that detail the
     name, set and collector's number of a card, as well as optionally the image url(s) of the card.
@@ -44,7 +74,7 @@ def processDecklist(decklist, reprint=False):
             extra = []
         else:
             # It's just a card name!
-            processedCard, extra = generateProcessedCardEntry(cardName, reprint);
+            processedCard, extra = generateProcessedCardEntry(cardName, reprint, basicSet);
 
         if processedCard != None:
             print('Found card ' + processedCard['name'])
@@ -135,27 +165,21 @@ def stripUselessNumbers(url):
     """
     return url[:url.find('?')]
 
-def generateProcessedCardEntry(cardName, reprint):
+def generateProcessedCardEntry(cardName, reprint, basicSet=None):
     """
     Generates a processed card entry from a given cardname. The function will do a lookup to
     scryfall api to find the card information, and then pass it on to generateProcessedCardEntryFromCardInfo().
 
     If the reprint parameter is set to True, it will find the most relevant reprint given by Scryfall.
     Otherwise, we'll search for the first printing.
-
-    Basic lands are hardcoded to the Guru lands.
     """
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
-    if cardName == 'Forest':
-        return ({'name':'Forest','set':'pgru','number':'1'},[])
-    elif cardName == 'Island':
-        return ({'name':'Island','set':'pgru','number':'2'},[])
-    elif cardName == 'Mountain':
-        return ({'name':'Mountain','set':'pgru','number':'3'},[])
-    elif cardName == 'Plains':
-        return ({'name':'Plains','set':'pgru','number':'4'},[])
-    elif cardName == 'Swamp':
-        return ({'name':'Swamp','set':'pgru','number':'5'},[])
+    global basics
+    if cardName.lower() in ['forest','island','mountain','plains','swamp']:
+        if basicSet:
+            return (basics[basicSet][cardName.lower()],[])
+        else:
+            return (basics['guru'][cardName.lower()],[])
 
     if reprint:
         response = scryfall.doRequest('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'"'})

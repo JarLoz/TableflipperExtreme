@@ -6,7 +6,7 @@ from gimgurpython import ImgurClient
 import dropbox
 import os
 
-def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgurId=None, dropboxToken=None, output=''):
+def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, imgurId=None, dropboxToken=None, output='', basicSet=None):
     """
     Converts a given decklist to the JSON format used by Tabletop Simulator, as well
     as generating the required images. The decklist is assumed to be a list of strings.
@@ -14,7 +14,7 @@ def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, img
     if (nocache):
         scryfall.bustCache()
 
-    processedDecklist,processedDecklistSideboard,processedExtraCards = processor.processDecklist(decklist, reprint)
+    processedDecklist,processedDecklistSideboard,processedExtraCards = processor.processDecklist(decklist, reprint, basicSet)
 
     if (nocache == False):
         scryfall.dumpCacheToFile()

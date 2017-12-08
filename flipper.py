@@ -29,6 +29,7 @@ def main():
     parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_true')
     parser.add_argument('--imgur', help='Imgur client ID for Imgur integration. See README.md for details')
     parser.add_argument('--dropbox', help='Dropbox oAuth2 token for Dropbox integration.')
+    parser.add_argument('--basic', help='Which basics to use. Allowed values: guru, unstable, alpha, core')
     parser.add_argument('input', help='Filename or URL of the decklist')
     args = parser.parse_args()
 
@@ -47,10 +48,14 @@ def main():
     elif not os.path.isdir(output):
         print('Output path not valid! Path: '+output)
         return
+    basicSet = args.basic
+    if basicSet != None and not basicSet in ['guru', 'unstable', 'alpha', 'core']:
+        print('--basic must be one of the following values: guru, unstable, alpha, core')
+        return
 
-    generate(args.input, deckName, hires, reprint, nocache, imgur, dropbox, output)
+    generate(args.input, deckName, hires, reprint, nocache, imgur, dropbox, output, basicSet)
 
-def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgurId=None, dropboxToken=None,output=''):
+def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgurId=None, dropboxToken=None,output='',basicSet=None):
 
     # Let's see if Imagemagick is installed
     if not checkMontage():
@@ -68,7 +73,7 @@ def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgu
         return
 
     print('Processing decklist')
-    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurId, dropboxToken, output)
+    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurId, dropboxToken, output, basicSet)
     ttsJsonFilename = os.path.join(output, deckName+'.json')
     with open(ttsJsonFilename, 'w',encoding='utf8') as outfile:
         json.dump(ttsJson, outfile, indent=2)
