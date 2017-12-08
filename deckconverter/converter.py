@@ -41,7 +41,7 @@ def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, h
     deckImageNames = images.createDeckImages(processedDecklist, deckName, hires, doubleSided, output)
     print('Creating deck object')
     deckObject = createDeckObject(processedDecklist, deckName, deckImageNames, posX, output, imgurId, dropboxToken)
-    if imgurId:
+    if imgurId or dropboxToken:
         print('Deleting local deck images')
         for deckImageName in deckImageNames:
             for imageName in deckImageName:

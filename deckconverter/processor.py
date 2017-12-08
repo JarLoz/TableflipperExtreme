@@ -154,7 +154,7 @@ def generateProcessedCardEntry(cardName, reprint):
     elif cardName == 'Plains':
         return ({'name':'Plains','set':'pgru','number':'4'},[])
     elif cardName == 'Swamp':
-        return ({'name':'Mountain','set':'pgru','number':'5'},[])
+        return ({'name':'Swamp','set':'pgru','number':'5'},[])
 
     if reprint:
         response = scryfall.doRequest('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'"'})
