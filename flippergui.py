@@ -7,6 +7,7 @@ import threading
 from queue import Queue
 from deckconverter import queue
 from PIL import ImageTk, Image
+import json
 
 class FlipperGui(tk.Frame):
     def __init__(self, master=None):
@@ -16,6 +17,8 @@ class FlipperGui(tk.Frame):
             self.baseDir = os.path.dirname(sys.executable)
         else:
             self.baseDir = os.path.dirname(os.path.realpath(__file__))
+
+        self.loadConfig()
 
         self.master = master
         self.queue = queue.initQueue()
@@ -47,6 +50,7 @@ class FlipperGui(tk.Frame):
 
         self.outputEntry = tk.Entry(self, width=60)
         self.outputEntry.grid(row=3, column=1, columnspan=3, sticky=tk.W)
+        self.outputEntry.insert(0,self.config['outputFolder'])
 
         self.outputButton = tk.Button(self, text='Browse', command=self.openFolder)
         self.outputButton.grid(row=3, column=4, sticky=tk.E)
@@ -56,9 +60,8 @@ class FlipperGui(tk.Frame):
 
         self.imgurEntry = tk.Entry(self, width=60)
         self.imgurEntry.grid(row=4, column=1, columnspan=3, sticky=tk.W)
-        savedImgurId = self.loadImgurId()
-        if savedImgurId:
-            self.imgurEntry.insert(0,savedImgurId)
+        if self.config['imgurId']:
+            self.imgurEntry.insert(0,self.config['imgurId'])
         self.imgurEntry.config(state='disabled')
 
         self.dropboxLabel = tk.Label(self, text='Dropbox Token(optional)')
@@ -66,9 +69,8 @@ class FlipperGui(tk.Frame):
 
         self.dropboxEntry = tk.Entry(self, width=60)
         self.dropboxEntry.grid(row=5, column=1, columnspan=3, sticky=tk.W)
-        savedDropboxToken = self.loadDropboxToken()
-        if savedDropboxToken:
-            self.dropboxEntry.insert(0,savedDropboxToken)
+        if self.config['dropboxToken']:
+            self.dropboxEntry.insert(0,self.config['dropboxToken'])
         self.dropboxEntry.config(state='disabled')
 
         self.basicsLabel = tk.Label(self, text='Basic lands')
@@ -76,19 +78,22 @@ class FlipperGui(tk.Frame):
 
         basicsOptions = ('guru','unstable','alpha','core')
         self.basicsVar = tk.StringVar()
-        self.basicsVar.set(basicsOptions[0])
+        self.basicsVar.set(self.config['basicSet'])
         self.basicsMenu = tk.OptionMenu(self, self.basicsVar, *basicsOptions)
         self.basicsMenu.grid(row=6, column=1, columnspan=2, sticky=tk.W)
 
         self.hiresVar = tk.IntVar()
+        self.hiresVar.set(int(self.config['hires']))
         self.hiresCheckbutton = tk.Checkbutton(self, text='High Resolution', variable=self.hiresVar)
         self.hiresCheckbutton.grid(row=7, column=0, sticky=tk.W)
 
         self.reprintsVar = tk.IntVar()
+        self.reprintsVar.set(int(self.config['reprints']))
         self.reprintsCheckbutton = tk.Checkbutton(self, text='Reprints', variable=self.reprintsVar)
         self.reprintsCheckbutton.grid(row=7, column=1, sticky=tk.W)
 
         self.nocacheVar = tk.IntVar()
+        self.nocacheVar.set(int(self.config['nocache']))
         self.nocacheCheckbutton = tk.Checkbutton(self, text='No cache', variable=self.nocacheVar)
         self.nocacheCheckbutton.grid(row=7, column=2, sticky=tk.W)
 
@@ -114,8 +119,7 @@ class FlipperGui(tk.Frame):
         while self.queue.qsize():
             msg = self.queue.get(0)
             if msg['type'] == 'done':
-                self.saveImgurId()
-                self.saveDropboxToken()
+                self.saveConfig()
                 self.enableInputs()
                 self.updateProgressLabel('All done!')
             elif msg['type'] == 'error':
@@ -166,6 +170,13 @@ class FlipperGui(tk.Frame):
         reprints = bool(self.reprintsVar.get())
         nocache = bool(self.nocacheVar.get())
         basicSet = self.basicsVar.get()
+        self.config['imgurId'] = imgurId
+        self.config['dropboxToken'] = dropboxToken
+        self.config['outputFolder'] = outputFolder
+        self.config['hires'] = hires
+        self.config['reprints'] = reprints
+        self.config['nocache'] = nocache
+        self.config['basicSet'] = basicSet
         self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName, hires, reprints, nocache, imgurId, dropboxToken, outputFolder, basicSet))
         self.thread.start()
         self.disableInputs()
@@ -228,29 +239,26 @@ class FlipperGui(tk.Frame):
         self.progressLabel['text'] = message
         self.progressLabel['fg'] = fg
 
-    def saveImgurId(self):
-        if self.imgurVar.get():
-            imgurId = self.imgurEntry.get()
-            with open('imgurId.txt', 'w') as outfile:
-                outfile.write(imgurId)
+    def loadConfig(self):
+        if os.path.isfile('config.json'):
+            # We have some kind of saved config, let's use it.
+            with open('config.json', 'r',encoding='utf8') as infile:
+                self.config = json.load(infile)
+        else:
+            # Use defaults.
+            self.config = {
+                    'imgurId':None,
+                    'dropboxToken':None,
+                    'outputFolder':'',
+                    'hires' : False,
+                    'reprints' : False,
+                    'nocache' : False,
+                    'basicSet' : 'guru'
+                    }
 
-    def loadImgurId(self):
-        if os.path.isfile('imgurId.txt'):
-            with open('imgurId.txt','r') as infile:
-                return infile.read().strip()
-        return None
-
-    def saveDropboxToken(self):
-        if self.dropboxVar.get():
-            dropboxToken = self.dropboxEntry.get()
-            with open('dropboxToken.txt', 'w') as outfile:
-                outfile.write(dropboxToken)
-
-    def loadDropboxToken(self):
-        if os.path.isfile('dropboxToken.txt'):
-            with open('dropboxToken.txt','r') as infile:
-                return infile.read().strip()
-        return None
+    def saveConfig(self):
+        with open('config.json', 'w', encoding='utf8') as outfile:
+            json.dump(self.config, outfile)
 
 def main():
     flipper.initApp()
