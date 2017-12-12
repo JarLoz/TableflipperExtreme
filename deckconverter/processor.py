@@ -30,6 +30,13 @@ basics = {
             'mountain': {'name':'Mountain','set':'10e','number':'376'},
             'plains': {'name':'Plains','set':'10e','number':'365'},
             'swamp': {'name':'Swamp','set':'10e','number':'372'}
+            },
+        'guay':{
+            'forest': {'name':'Forest','set':'c16','number':'349'},
+            'island': {'name':'Island','set':'c16','number':'340'},
+            'mountain': {'name':'Mountain','set':'c16','number':'346'},
+            'plains': {'name':'Plains','set':'c16','number':'337'},
+            'swamp': {'name':'Swamp','set':'c16','number':'343'}
             }
         }
 def processDecklist(decklist, reprint=False, basicSet=None):

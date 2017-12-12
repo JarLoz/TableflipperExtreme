@@ -29,7 +29,7 @@ def main():
     parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_true')
     parser.add_argument('--imgur', help='Imgur client ID for Imgur integration. See README.md for details')
     parser.add_argument('--dropbox', help='Dropbox oAuth2 token for Dropbox integration.')
-    parser.add_argument('--basic', help='Which basics to use. Allowed values: guru, unstable, alpha, core')
+    parser.add_argument('--basic', help='Which basics to use. Allowed values: guru, unstable, alpha, core, guay')
     parser.add_argument('input', help='Filename or URL of the decklist')
     args = parser.parse_args()
 
@@ -49,8 +49,8 @@ def main():
         print('Output path not valid! Path: '+output)
         return
     basicSet = args.basic
-    if basicSet != None and not basicSet in ['guru', 'unstable', 'alpha', 'core']:
-        print('--basic must be one of the following values: guru, unstable, alpha, core')
+    if basicSet != None and not basicSet in ['guru', 'unstable', 'alpha', 'core', 'guay']:
+        print('--basic must be one of the following values: guru, unstable, alpha, core, guay')
         return
 
     generate(args.input, deckName, hires, reprint, nocache, imgur, dropbox, output, basicSet)

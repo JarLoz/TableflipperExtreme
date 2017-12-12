@@ -76,7 +76,7 @@ class FlipperGui(tk.Frame):
         self.basicsLabel = tk.Label(self, text='Basic lands')
         self.basicsLabel.grid(row=6, column=0, sticky=tk.W)
 
-        basicsOptions = ('guru','unstable','alpha','core')
+        basicsOptions = ('guru','unstable','alpha','core','guay')
         self.basicsVar = tk.StringVar()
         self.basicsVar.set(self.config['basicSet'])
         self.basicsMenu = tk.OptionMenu(self, self.basicsVar, *basicsOptions)
