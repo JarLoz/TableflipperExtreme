@@ -138,13 +138,13 @@ def getDecklist(inputStr):
             bodyEnd = re.search('</body>', deckboxHtml).start()
             deckboxHtmlBody = deckboxHtml[bodyStart:bodyEnd]
             decklist = deckboxHtmlBody.replace('<p>','').replace('</p>','').replace('<strong>','').replace('</strong>','').split('<br/>')
-        elif re.match('http://tappedout.net', inputStr):
+        elif re.match('https://tappedout.net', inputStr):
             #Tappedout URL
             response = requests.get(inputStr+'?fmt=txt')
             decklist = response.text.split('\n')
         else:
-            print('Input URL must be to either to https://deckbox.org or http://tappedout.net.')
-            queue.sendMessage({'type':'error', 'text':'Input URL must be either to https://deckbox.org or http://tappedout.net'})
+            print('Input URL must be to either to https://deckbox.org or https://tappedout.net.')
+            queue.sendMessage({'type':'error', 'text':'Input URL must be either to https://deckbox.org or https://tappedout.net'})
             return None
         del response
         return decklist
