@@ -138,7 +138,7 @@ def getDecklist(inputStr):
             bodyEnd = re.search('</body>', deckboxHtml).start()
             deckboxHtmlBody = deckboxHtml[bodyStart:bodyEnd]
             decklist = deckboxHtmlBody.replace('<p>','').replace('</p>','').replace('<strong>','').replace('</strong>','').split('<br/>')
-        elif re.match('https://tappedout.net', inputStr):
+        elif re.match('https://tappedout.net', inputStr) or re.match('http://tappedout.net', inputStr):
             #Tappedout URL
             response = requests.get(inputStr+'?fmt=txt')
             decklist = response.text.split('\n')
