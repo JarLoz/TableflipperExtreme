@@ -54,20 +54,30 @@ def createDeckObject(processedDecklist, deckName, deckImageNames, posX, output='
     """
     Creates a TTS deck object from a given processed decklist.
     """
-    deckObject = {'Transform': {'posX':posX,'posY':1.0,'posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1},'Name': 'DeckCustom','Nickname':deckName}
-    containedObjects = []
-    deckIds = []
-    cardId = 100
-    for card in processedDecklist:
-        cardObject = {'Name':'Card','Nickname':card['name'],'CardID':cardId}
-        cardObject['Transform'] = {'posX':2.5,'posY':2.5,'posZ':3.5,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1}
-        containedObjects.append(cardObject)
-        deckIds.append(cardId)
-        cardId += 1
-        if int(str(cardId)[1:]) == 69:
-            cardId += 31
-    deckObject['ContainedObjects'] = containedObjects
-    deckObject['DeckIDs'] = deckIds
+
+    deckObject = {'Transform': {'posX':posX,'posY':1.0,'posZ':-0.0,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1}}
+    if len(processedDecklist) > 1:
+        deckObject['Name'] = 'DeckCustom'
+        deckObject['Nickname'] = deckName
+        containedObjects = []
+        deckIds = []
+        cardId = 100
+        for card in processedDecklist:
+            cardObject = {'Name':'Card','Nickname':card['name'],'CardID':cardId}
+            cardObject['Transform'] = {'posX':2.5,'posY':2.5,'posZ':3.5,'rotX':0,'rotY':180,'rotZ':180,'scaleX':1,'scaleY':1,'scaleZ':1}
+            containedObjects.append(cardObject)
+            deckIds.append(cardId)
+            cardId += 1
+            if int(str(cardId)[1:]) == 69:
+                cardId += 31
+        deckObject['ContainedObjects'] = containedObjects
+        deckObject['DeckIDs'] = deckIds
+    else:
+        card = processedDecklist[0]
+        deckObject['Name'] = 'Card'
+        deckObject['Nickname'] = card['name']
+        deckObject['cardId'] = 100
+
     customDeck = {}
     customDeckIndex = 1
     for deckImageName in deckImageNames:
@@ -85,6 +95,7 @@ def createDeckObject(processedDecklist, deckName, deckImageNames, posX, output='
         customDeckIndex += 1
     deckObject['CustomDeck'] = customDeck
     return deckObject
+
 
 def getDeckUrl(deckImage, output, imgurId, dropboxToken):
     if (dropboxToken):
