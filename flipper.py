@@ -149,6 +149,9 @@ def getDecklist(inputStr):
             decklist = deckboxHtmlBody.replace('<p>','').replace('</p>','').replace('<strong>','').replace('</strong>','').split('<br/>')
         elif re.search('tappedout.net', inputStr):
             #Tappedout URL
+            if inputStr.find('?') > 0:
+                # We got some parameters here, let's get rid of them.
+                inputStr = inputStr[:inputStr.find('?')]
             response = requests.get(inputStr+'?fmt=txt')
             decklist = response.text.split('\n')
         else:
