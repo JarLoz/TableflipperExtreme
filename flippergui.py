@@ -140,15 +140,34 @@ class FlipperGui(tk.Frame):
                 self.updateProgressLabel(msg['text'])
         self.master.after(100, self.processQueue)
 
+    def getInitialDir(self, path):
+        if os.path.isfile(path):
+            return os.path.dirname(path)
+        elif os.path.isdir(path):
+            return path
+        elif os.path.expanduser('~'):
+            return os.path.expanduser('~')
+        else:
+            return self.baseDir
+
     def openFile(self):
-        filename = filedialog.askopenfilename(initialdir=self.baseDir,parent=self,title='Decklist')
-        self.inputEntry.delete(0, tk.END)
-        self.inputEntry.insert(0, filename)
+        currentInput = self.inputEntry.get()
+        initialDir = self.getInitialDir(currentInput)
+
+        filename = filedialog.askopenfilename(initialdir=initialDir,parent=self,title='Decklist')
+        if filename:
+            self.inputEntry.delete(0, tk.END)
+            self.inputEntry.insert(0, filename)
 
     def openFolder(self):
-        dirname = filedialog.askdirectory(initialdir=self.baseDir,parent=self,title='Output directory')
-        self.outputEntry.delete(0, tk.END)
-        self.outputEntry.insert(0, dirname)
+        currentOutput = self.outputEntry.get()
+        initialDir = self.getInitialDir(currentOutput)
+
+        dirname = filedialog.askdirectory(initialdir=initialDir,parent=self,title='Output directory')
+
+        if dirname:
+            self.outputEntry.delete(0, tk.END)
+            self.outputEntry.insert(0, dirname)
 
     def generate(self):
         inputStr = self.inputEntry.get()
