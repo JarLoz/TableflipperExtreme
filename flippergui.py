@@ -24,94 +24,105 @@ class FlipperGui(tk.Frame):
         self.queue = queue.initQueue()
 
         self.grid()
+
+        rowIndex = 0
         self.logoImage = ImageTk.PhotoImage(Image.open('logo.png'))
 
         self.logoLabel = tk.Label(self, image=self.logoImage)
-        self.logoLabel.grid(row=0, column=0, columnspan=5)
+        self.logoLabel.grid(row=rowIndex, column=0, columnspan=5)
+
+        rowIndex += 1
 
         self.deckNameLabel = tk.Label(self, text='Deckname')
-        self.deckNameLabel.grid(row=1, column=0, sticky=tk.W)
+        self.deckNameLabel.grid(row=rowIndex, column=0, sticky=tk.W)
 
         self.deckNameEntry = tk.Entry(self, width=60)
-        self.deckNameEntry.grid(row=1, column=1, columnspan=3, stick=tk.W)
+        self.deckNameEntry.grid(row=rowIndex, column=1, columnspan=3, stick=tk.W)
         self.deckNameEntry.insert(0,'Deck')
 
+        rowIndex += 1
         self.inputLabel = tk.Label(self, text='File or URL')
-        self.inputLabel.grid(row=2, column=0, sticky=tk.W)
+        self.inputLabel.grid(row=rowIndex, column=0, sticky=tk.W)
 
         self.inputEntry = tk.Entry(self, width=60)
-        self.inputEntry.grid(row=2, column=1, columnspan=3, sticky=tk.W)
+        self.inputEntry.grid(row=rowIndex, column=1, columnspan=3, sticky=tk.W)
 
         self.inputButton = tk.Button(self, text='Browse', command=self.openFile)
-        self.inputButton.grid(row=2, column=4, sticky=tk.E)
+        self.inputButton.grid(row=rowIndex, column=4, sticky=tk.E)
 
+        rowIndex += 1
         self.outputLabel = tk.Label(self, text='Output folder (optional)')
-        self.outputLabel.grid(row=3, column=0, sticky=tk.W)
+        self.outputLabel.grid(row=rowIndex, column=0, sticky=tk.W)
 
         self.outputEntry = tk.Entry(self, width=60)
-        self.outputEntry.grid(row=3, column=1, columnspan=3, sticky=tk.W)
+        self.outputEntry.grid(row=rowIndex, column=1, columnspan=3, sticky=tk.W)
         self.outputEntry.insert(0,self.config['outputFolder'])
 
         self.outputButton = tk.Button(self, text='Browse', command=self.openFolder)
-        self.outputButton.grid(row=3, column=4, sticky=tk.E)
+        self.outputButton.grid(row=rowIndex, column=4, sticky=tk.E)
 
+        rowIndex += 1
         self.imgurLabel = tk.Label(self, text='ImgurID (optional)')
-        self.imgurLabel.grid(row=4, column=0, sticky=tk.W)
+        self.imgurLabel.grid(row=rowIndex, column=0, sticky=tk.W)
 
         self.imgurEntry = tk.Entry(self, width=60)
-        self.imgurEntry.grid(row=4, column=1, columnspan=3, sticky=tk.W)
+        self.imgurEntry.grid(row=rowIndex, column=1, columnspan=3, sticky=tk.W)
         if self.config['imgurId']:
             self.imgurEntry.insert(0,self.config['imgurId'])
         self.imgurEntry.config(state='disabled')
 
+        rowIndex += 1
         self.dropboxLabel = tk.Label(self, text='Dropbox Token(optional)')
-        self.dropboxLabel.grid(row=5, column=0, sticky=tk.W)
+        self.dropboxLabel.grid(row=rowIndex, column=0, sticky=tk.W)
 
         self.dropboxEntry = tk.Entry(self, width=60)
-        self.dropboxEntry.grid(row=5, column=1, columnspan=3, sticky=tk.W)
+        self.dropboxEntry.grid(row=rowIndex, column=1, columnspan=3, sticky=tk.W)
         if self.config['dropboxToken']:
             self.dropboxEntry.insert(0,self.config['dropboxToken'])
         self.dropboxEntry.config(state='disabled')
 
+        rowIndex += 1
         self.basicsLabel = tk.Label(self, text='Basic lands')
-        self.basicsLabel.grid(row=6, column=0, sticky=tk.W)
+        self.basicsLabel.grid(row=rowIndex, column=0, sticky=tk.W)
 
         basicsOptions = ('guru','unstable','alpha','core','guay')
         self.basicsVar = tk.StringVar()
         self.basicsVar.set(self.config['basicSet'])
         self.basicsMenu = tk.OptionMenu(self, self.basicsVar, *basicsOptions)
-        self.basicsMenu.grid(row=6, column=1, columnspan=2, sticky=tk.W)
+        self.basicsMenu.grid(row=rowIndex, column=1, columnspan=2, sticky=tk.W)
 
+        rowIndex += 1
         self.hiresVar = tk.IntVar()
         self.hiresVar.set(int(self.config['hires']))
         self.hiresCheckbutton = tk.Checkbutton(self, text='High Resolution', variable=self.hiresVar)
-        self.hiresCheckbutton.grid(row=7, column=0, sticky=tk.W)
+        self.hiresCheckbutton.grid(row=rowIndex, column=0, sticky=tk.W)
 
         self.reprintsVar = tk.IntVar()
         self.reprintsVar.set(int(self.config['reprints']))
         self.reprintsCheckbutton = tk.Checkbutton(self, text='Reprints', variable=self.reprintsVar)
-        self.reprintsCheckbutton.grid(row=7, column=1, sticky=tk.W)
+        self.reprintsCheckbutton.grid(row=rowIndex, column=1, sticky=tk.W)
 
         self.nocacheVar = tk.IntVar()
         self.nocacheVar.set(int(self.config['nocache']))
         self.nocacheCheckbutton = tk.Checkbutton(self, text='No cache', variable=self.nocacheVar)
-        self.nocacheCheckbutton.grid(row=7, column=2, sticky=tk.W)
+        self.nocacheCheckbutton.grid(row=rowIndex, column=2, sticky=tk.W)
 
         self.imgurVar = tk.IntVar()
         self.imgurCheckbutton = tk.Checkbutton(self, text='Imgur Upload', variable=self.imgurVar)
-        self.imgurCheckbutton.grid(row=7, column=3, sticky=tk.W)
+        self.imgurCheckbutton.grid(row=rowIndex, column=3, sticky=tk.W)
         self.imgurVar.trace('w', self.imgurVarCallback)
 
         self.dropboxVar = tk.IntVar()
         self.dropboxCheckbutton = tk.Checkbutton(self, text='Dropbox Upload', variable=self.dropboxVar)
-        self.dropboxCheckbutton.grid(row=7, column=4, sticky=tk.W)
+        self.dropboxCheckbutton.grid(row=rowIndex, column=4, sticky=tk.W)
         self.dropboxVar.trace('w', self.dropboxVarCallback)
 
+        rowIndex += 1
         self.progressLabel = tk.Label(self, text='Ready')
-        self.progressLabel.grid(row=8, column=0, columnspan=4, sticky=tk.W)
+        self.progressLabel.grid(row=rowIndex, column=0, columnspan=4, sticky=tk.W)
 
         self.generateButton = tk.Button(self, text='Generate', command=self.generate)
-        self.generateButton.grid(row=8, column=4, sticky=tk.E)
+        self.generateButton.grid(row=rowIndex, column=4, sticky=tk.E)
 
         self.processQueue()
 

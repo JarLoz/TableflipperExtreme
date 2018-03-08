@@ -1,4 +1,5 @@
 import sys
+import traceback
 import json
 from deckconverter import converter 
 from deckconverter import scryfall
@@ -57,28 +58,36 @@ def main():
 
 def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgurId=None, dropboxToken=None,output='',basicSet=None):
 
-    # Let's see if Imagemagick is installed
-    if not checkMontage():
-        return
+    try: 
+        # Let's see if Imagemagick is installed
+        if not checkMontage():
+            return
 
-    # Let's see if Imgur integration is functioning
-    if imgurId and not checkImgur(imgurId):
-        return
+        # Let's see if Imgur integration is functioning
+        if imgurId and not checkImgur(imgurId):
+            return
 
-    if dropboxToken and not checkDropbox(dropboxToken):
-        return
+        if dropboxToken and not checkDropbox(dropboxToken):
+            return
 
-    decklist = getDecklist(inputStr)
-    if decklist == None:
-        return
+        decklist = getDecklist(inputStr)
+        if decklist == None:
+            return
 
-    print('Processing decklist')
-    ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurId, dropboxToken, output, basicSet)
-    ttsJsonFilename = os.path.join(output, deckName+'.json')
-    with open(ttsJsonFilename, 'w',encoding='utf8') as outfile:
-        json.dump(ttsJson, outfile, indent=2)
-    queue.sendMessage({'type':'done'})
-    print('All done')
+        print('Processing decklist')
+        ttsJson = converter.convertDecklistToJSON(decklist, deckName, hires, reprint, nocache, imgurId, dropboxToken, output, basicSet)
+        ttsJsonFilename = os.path.join(output, deckName+'.json')
+        with open(ttsJsonFilename, 'w',encoding='utf8') as outfile:
+            json.dump(ttsJson, outfile, indent=2)
+        queue.sendMessage({'type':'done'})
+        print('All done')
+    except:
+        # Handle random uncaught exceptions "gracefully"
+        errorMessage = 'Error: ' + sys.exc_info()[0].__name__
+        queue.sendMessage({'type':'error', 'text':errorMessage})
+        print(errorMessage)
+        traceback.print_tb(sys.exec_info()[2])
+
 
 def checkMontage():
     try:
@@ -130,7 +139,7 @@ def getDecklist(inputStr):
     """
     if re.match('http', inputStr):
         print('Generating from URL ' + inputStr)
-        if re.match('https://deckbox.org', inputStr):
+        if re.search('deckbox.org', inputStr):
             # Deckbox.org URL
             response = requests.get(inputStr+'/export')
             deckboxHtml = response.text
@@ -138,7 +147,7 @@ def getDecklist(inputStr):
             bodyEnd = re.search('</body>', deckboxHtml).start()
             deckboxHtmlBody = deckboxHtml[bodyStart:bodyEnd]
             decklist = deckboxHtmlBody.replace('<p>','').replace('</p>','').replace('<strong>','').replace('</strong>','').split('<br/>')
-        elif re.match('https://tappedout.net', inputStr) or re.match('http://tappedout.net', inputStr):
+        elif re.search('tappedout.net', inputStr):
             #Tappedout URL
             response = requests.get(inputStr+'?fmt=txt')
             decklist = response.text.split('\n')
