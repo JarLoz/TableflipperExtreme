@@ -94,13 +94,15 @@ While I personally enjoy the style of older magic cards, there is an option to u
 
 By default, Tableflipper Extreme uses Guru basics. However, by using the `--basic` option, the application can also be configured to use other basic lands. Allowed options are: 
 
-`guru`: These are the default premium lands by Terese Nielsen.
+`guru`: These are the premium guru basic lands by Terese Nielsen.
 
 `unstable`: New full art lands from the Unstable set, by John Avon.
 
 `alpha`: From the original Limited Edition Alpha set, by various artists.
 
 `core`: For those looking for something understated, the cycle of basics from 10th edition, by John Avon.
+
+`guay`: Gorgeous painterly cycle of basics from Commander 2016 set, by Rebecca Guay
 
 Using the option is simple:
 
