@@ -96,6 +96,7 @@ class FlipperGui(tk.Frame):
         self.hiresVar.set(int(self.config['hires']))
         self.hiresCheckbutton = tk.Checkbutton(self, text='High Resolution', variable=self.hiresVar)
         self.hiresCheckbutton.grid(row=rowIndex, column=0, sticky=tk.W)
+        self.hiresVar.trace('w', self.hiresVarCallback)
 
         self.reprintsVar = tk.IntVar()
         self.reprintsVar.set(int(self.config['reprints']))
@@ -108,14 +109,18 @@ class FlipperGui(tk.Frame):
         self.nocacheCheckbutton.grid(row=rowIndex, column=2, sticky=tk.W)
 
         self.imgurVar = tk.IntVar()
+        self.imgurVar.set(int(self.config['imgur']))
         self.imgurCheckbutton = tk.Checkbutton(self, text='Imgur Upload', variable=self.imgurVar)
         self.imgurCheckbutton.grid(row=rowIndex, column=3, sticky=tk.W)
         self.imgurVar.trace('w', self.imgurVarCallback)
+        self.updateImgurEntry()
 
         self.dropboxVar = tk.IntVar()
+        self.dropboxVar.set(int(self.config['dropbox']))
         self.dropboxCheckbutton = tk.Checkbutton(self, text='Dropbox Upload', variable=self.dropboxVar)
         self.dropboxCheckbutton.grid(row=rowIndex, column=4, sticky=tk.W)
         self.dropboxVar.trace('w', self.dropboxVarCallback)
+        self.updateDropboxEntry()
 
         rowIndex += 1
         self.progressLabel = tk.Label(self, text='Ready')
@@ -173,6 +178,8 @@ class FlipperGui(tk.Frame):
         inputStr = self.inputEntry.get()
         deckName = self.deckNameEntry.get()
         outputFolder = self.outputEntry.get()
+        imgur = bool(self.imgurVar.get())
+        dropbox = bool(self.dropboxVar.get())
         if len(inputStr) == 0:
             self.updateProgressLabel('Must give filename or URL', fg='red')
             return
@@ -182,14 +189,14 @@ class FlipperGui(tk.Frame):
         if len(outputFolder) and not os.path.isdir(outputFolder):
             self.updateProgressLabel('Output folder must exist', fg='red')
             return
-        if self.imgurVar.get():
+        if imgur:
             imgurId = self.imgurEntry.get()
             if len(imgurId) == 0:
                 self.updateProgressLabel('Must have ImgurID', fg='red')
                 return
         else:
             imgurId = None
-        if self.dropboxVar.get():
+        if dropbox:
             dropboxToken = self.dropboxEntry.get()
             if len(dropboxToken) == 0:
                 self.updateProgressLabel('Must have Dropbox Token', fg='red')
@@ -200,13 +207,7 @@ class FlipperGui(tk.Frame):
         reprints = bool(self.reprintsVar.get())
         nocache = bool(self.nocacheVar.get())
         basicSet = self.basicsVar.get()
-        self.config['imgurId'] = imgurId
-        self.config['dropboxToken'] = dropboxToken
-        self.config['outputFolder'] = outputFolder
-        self.config['hires'] = hires
-        self.config['reprints'] = reprints
-        self.config['nocache'] = nocache
-        self.config['basicSet'] = basicSet
+        self.updateConfig()
         self.thread = threading.Thread(target=flipper.generate,args=(inputStr, deckName, hires, reprints, nocache, imgurId, dropboxToken, outputFolder, basicSet))
         self.thread.start()
         self.disableInputs()
@@ -245,7 +246,20 @@ class FlipperGui(tk.Frame):
         self.updateImgurEntry()
         self.updateDropboxEntry()
 
+    def hiresVarCallback(self, name, index, mode):
+        hires = bool(self.hiresVar.get())
+        imgur = bool(self.imgurVar.get())
+        if hires and imgur:
+            self.imgurVar.set(False)
+
     def imgurVarCallback(self, name, index, mode):
+        hires = bool(self.hiresVar.get())
+        imgur = bool(self.imgurVar.get())
+        dropbox = bool(self.dropboxVar.get())
+        if hires and imgur:
+            self.hiresVar.set(False)
+        if dropbox and imgur:
+            self.dropboxVar.set(False)
         self.updateImgurEntry()
 
     def updateImgurEntry(self):
@@ -256,6 +270,10 @@ class FlipperGui(tk.Frame):
             self.imgurEntry.config(state='disabled')
 
     def dropboxVarCallback(self, name, index, mode):
+        imgur = bool(self.imgurVar.get())
+        dropbox = bool(self.dropboxVar.get())
+        if dropbox and imgur:
+            self.imgurVar.set(False)
         self.updateDropboxEntry()
 
     def updateDropboxEntry(self):
@@ -269,22 +287,47 @@ class FlipperGui(tk.Frame):
         self.progressLabel['text'] = message
         self.progressLabel['fg'] = fg
 
+    def updateConfig(self):
+        hires = bool(self.hiresVar.get())
+        reprints = bool(self.reprintsVar.get())
+        nocache = bool(self.nocacheVar.get())
+        basicSet = self.basicsVar.get()
+        outputFolder = self.outputEntry.get()
+        imgur = bool(self.imgurVar.get())
+        dropbox = bool(self.dropboxVar.get())
+        imgurId = self.imgurEntry.get()
+        dropboxToken = self.dropboxEntry.get()
+
+        self.config['imgurId'] = imgurId
+        self.config['imgur'] = imgur
+        self.config['dropboxToken'] = dropboxToken
+        self.config['dropbox'] = dropbox
+        self.config['outputFolder'] = outputFolder
+        self.config['hires'] = hires
+        self.config['reprints'] = reprints
+        self.config['nocache'] = nocache
+        self.config['basicSet'] = basicSet
+
     def loadConfig(self):
+        # Default values
+        config = {
+                'imgurId':None,
+                'imgur': False,
+                'dropboxToken':None,
+                'dropbox': False,
+                'outputFolder':'',
+                'hires' : False,
+                'reprints' : False,
+                'nocache' : False,
+                'basicSet' : 'guru'
+                }
         if os.path.isfile('config.json'):
             # We have some kind of saved config, let's use it.
             with open('config.json', 'r',encoding='utf8') as infile:
-                self.config = json.load(infile)
-        else:
-            # Use defaults.
-            self.config = {
-                    'imgurId':None,
-                    'dropboxToken':None,
-                    'outputFolder':'',
-                    'hires' : False,
-                    'reprints' : False,
-                    'nocache' : False,
-                    'basicSet' : 'guru'
-                    }
+                saved = json.load(infile)
+                config = {**config, **saved}
+
+        self.config = config
 
     def saveConfig(self):
         with open('config.json', 'w', encoding='utf8') as outfile:

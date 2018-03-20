@@ -28,7 +28,7 @@ def main():
     parser.add_argument('--hires', help='Use high resolution versions of card images. Causes very large file sizes', action='store_true')
     parser.add_argument('--reprints', help='Use the latest reprints of the cards', action='store_true')
     parser.add_argument('--nocache', help='Do not use local cache for scryfall', action='store_true')
-    parser.add_argument('--imgur', help='Imgur client ID for Imgur integration. See README.md for details')
+    parser.add_argument('--imgur', help="Imgur client ID for Imgur integration. See README.md for details. Doesn't work with --hires.")
     parser.add_argument('--dropbox', help='Dropbox oAuth2 token for Dropbox integration.')
     parser.add_argument('--basic', help='Which basics to use. Allowed values: guru, unstable, alpha, core, guay')
     parser.add_argument('input', help='Filename or URL of the decklist')
@@ -59,6 +59,15 @@ def main():
 def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgurId=None, dropboxToken=None,output='',basicSet=None):
 
     try: 
+        # Only one integration at a time, please
+        if imgurId and dropboxToken:
+            print('Only one integration at a time, please')
+            return
+
+        if imgurId and hires:
+            print('High resolution images are not supported for imgur integration')
+            return
+
         # Let's see if Imagemagick is installed
         if not checkMontage():
             return
