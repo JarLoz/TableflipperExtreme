@@ -13,6 +13,7 @@ import subprocess
 from gimgurpython import ImgurClient
 from gimgurpython.helpers.error import ImgurClientError
 import dropbox
+from time import gmtime, strftime
 
 def initApp():
     if getattr(sys, 'frozen', False) :
@@ -56,27 +57,28 @@ def main():
 
     generate(args.input, deckName, hires, reprint, nocache, imgur, dropbox, output, basicSet)
 
+def generateDraft(setName, packCount, hires=False, imgurId=None, dropboxToken=None, output=''):
+    try: 
+        if not checkIntegrations(hires, imgurId, dropboxToken):
+            return
+
+        ttsJson = converter.convertSetToDraftJSON(setname, packCount, hires, imgurId, dropboxToken, output)
+        ttsJsonFilename = os.path.join(output, setName+'-draft-'+strftime("%Y%m%d%H%M%S", gmtime())+'.json')
+        with open(ttsJsonFilename, 'w',encoding='utf8') as outfile:
+            json.dump(ttsJson, outfile, indent=2)
+        queue.sendMessage({'type':'done'})
+        print('All done')
+    except:
+        # Handle random uncaught exceptions "gracefully"
+        errorMessage = 'Error: ' + sys.exc_info()[0].__name__
+        queue.sendMessage({'type':'error', 'text':errorMessage})
+        print(errorMessage)
+        traceback.print_tb(sys.exec_info()[2])
+
 def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgurId=None, dropboxToken=None,output='',basicSet=None):
 
     try: 
-        # Only one integration at a time, please
-        if imgurId and dropboxToken:
-            print('Only one integration at a time, please')
-            return
-
-        if imgurId and hires:
-            print('High resolution images are not supported for imgur integration')
-            return
-
-        # Let's see if Imagemagick is installed
-        if not checkMontage():
-            return
-
-        # Let's see if Imgur integration is functioning
-        if imgurId and not checkImgur(imgurId):
-            return
-
-        if dropboxToken and not checkDropbox(dropboxToken):
+        if not checkIntegrations(hires, imgurId, dropboxToken):
             return
 
         decklist = getDecklist(inputStr)
@@ -97,6 +99,28 @@ def generate(inputStr, deckName, hires=False, reprint=False, nocache=False, imgu
         print(errorMessage)
         traceback.print_tb(sys.exec_info()[2])
 
+def checkIntegrations(hires, imgurId, dropboxToken):
+    # Only one integration at a time, please
+    if imgurId and dropboxToken:
+        print('Only one integration at a time, please')
+        return False
+
+    if imgurId and hires:
+        print('High resolution images are not supported for imgur integration')
+        return False
+
+    # Let's see if Imagemagick is installed
+    if not checkMontage():
+        return False
+
+    # Let's see if Imgur integration is functioning
+    if imgurId and not checkImgur(imgurId):
+        return False
+
+    if dropboxToken and not checkDropbox(dropboxToken):
+        return False
+
+    return True
 
 def checkMontage():
     try:

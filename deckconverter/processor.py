@@ -1,6 +1,7 @@
 import re
 from . import scryfall
 from . import queue
+import random
 
 basics = {
         'guru':{
@@ -233,3 +234,51 @@ def findTokenInfo(cardInfo):
                     else:
                         name += " "
                         name += part
+
+def generateDraftPackLists(setName, packCount):
+    mythics = []
+    rares = []
+    uncommons = []
+    commons = []
+    hasMore = True
+    nextPage = None
+    while hasMore:
+        response = scryfall.doRequest()
+        if nextPage:
+            response = scryfall.doRequest(nextPage)
+        else:
+            response = scryfall.doRequest('https://api.scryfall.com/cards/search',{'q':'set:'+setName, 'order':'rarity'})
+        hasMore = response['has_more']
+        if hasMore:
+            nextPage = response['next_page']
+        for cardInfo in response['data']:
+            cardEntry = generateProcessedCardEntryFromCardInfo(cardInfo)[0]
+            rarity = cardInfo['rarity']
+            if rarity == 'mythic':
+                mythics.append(cardEntry)
+            elif: rarity == 'rare':
+                rares.append(cardEntry)
+            elif: rarity == 'uncommon':
+                uncommons.append(cardEntry)
+            elif: rarity == 'common':
+                commons.append(cardEntry)
+
+    packIndex = 0
+    packs = []
+    while packIndex < packCount:
+        random.shuffle(commons)
+        random.shuffle(uncommons)
+        random.shuffle(rares)
+        random.shuffle(mythics)
+        pack = commons[:10]
+        pack =+ uncommons[:3]
+        if random.random() <= 1/8: #one in eight packs contains a mythic
+            pack.append(mythics[0])
+        else:
+            pack.append(rares[0])
+        packs.append(pack)
+        packIndex = packIndex + 1
+    
+    return packs
+
+

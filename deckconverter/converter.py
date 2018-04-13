@@ -31,6 +31,20 @@ def convertDecklistToJSON(decklist, deckName, hires, reprint, nocache=False, img
 
     return {'ObjectStates':deckObjects}
 
+def convertSetToDraftJSON(setName, packCount, hires, imgurId, dropboxToken, output, basicSet):
+    draftPackLists = generateDraftPackLists(setName, packCount)
+
+    deckName = setName + '-pack-'
+    packCount = 1
+    posX = 0.0
+    deckObjects = []
+    for packList in draftPackLists:
+        deckObjects.append(generateDeckObjectFromProcessedDeckList(packList, deckName+str(packCount), posX, False, imgurId, dropboxToken, output))
+        packCount += 1
+        posX += 4.0
+
+    return {'ObjectStates':deckObjects}
+
 def generateDeckObjectFromProcessedDecklist(processedDecklist, deckName, posX, hires, doubleSided=False, imgurId=None, dropboxToken=None, output=''):
     """
     Downloads the cards and creates the TTS deck object for a given processed decklist.
@@ -124,3 +138,4 @@ def uploadToDropbox(deckImage, dropboxToken, output):
     dbx.files_upload(data, dropboxPath)
     share = dbx.sharing_create_shared_link(dropboxPath)
     return share.url.replace('dl=0','raw=1')
+
