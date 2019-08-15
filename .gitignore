@@ -7,3 +7,4 @@ imageCache/
 *.json
 *.pyc
 __pycache__/
+.idea

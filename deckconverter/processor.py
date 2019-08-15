@@ -131,9 +131,10 @@ def generateProcessedCardEntryFromCardInfo(cardInfo, cardName=None):
     if cardInfo['layout'] == 'transform':
         frontFaceUrl = ""
         backFaceUrl = ""
-        for cardFace in cardInfo['card_faces']:
+        for cardFaceIndex in range(len(cardInfo['card_faces'])):
+            cardFace = cardInfo['card_faces'][cardFaceIndex]
             imageUrl = cardFace['image_uris']['large']
-            if (cardFace['name'] == cardName):
+            if (cardFaceIndex == 0):
                 frontFaceUrl = stripUselessNumbers(imageUrl)
             else:
                 backFaceUrl = stripUselessNumbers(imageUrl)

@@ -3,6 +3,7 @@ import requests
 import shutil
 import subprocess
 from . import queue
+import hashlib
 
 montagePath = None
 
@@ -46,13 +47,10 @@ def generateFilenameFromUrl(url):
     """
     Transforms a card URL into a local filename in the format
 
-    imageCache/setname_cardnumber.jpg.
+    Example:
+    imageCache/8bc3ef6a247ea3e4d55489529cdcd84c.jpg.
     """
-    reverse = url[::-1]
-    filename = reverse[:reverse.find('/')][::-1]
-    reverse = reverse[reverse.find('/')+1:]
-    setname = reverse[:reverse.find('/')][::-1]
-    return 'imageCache/'+ setname + '_' + filename
+    return 'imageCache/'+ hashlib.md5(url.encode()).hexdigest() + '.jpg'
 
 def downloadCardImageByUrl(url):
     """
