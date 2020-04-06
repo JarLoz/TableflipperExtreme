@@ -51,8 +51,8 @@ def main():
         print('Output path not valid! Path: '+output)
         return
     basicSet = args.basic
-    if basicSet != None and not basicSet in ['guru', 'unstable', 'alpha', 'core', 'guay']:
-        print('--basic must be one of the following values: guru, unstable, alpha, core, guay')
+    if basicSet != None and not basicSet in ['guru', 'unstable', 'alpha', 'core', 'guay', 'unsanctioned']:
+        print('--basic must be one of the following values: guru, unstable, alpha, core, guay, unsanctioned')
         return
 
     generate(args.input, deckName, hires, reprint, nocache, imgur, dropbox, output, basicSet)
@@ -187,6 +187,10 @@ def getDecklist(inputStr):
                 inputStr = inputStr[:inputStr.find('?')]
             response = requests.get(inputStr+'?fmt=txt')
             decklist = response.text.split('\n')
+        elif re.search('scryfall', inputStr):
+            key = inputStr.split('/')[-1]
+            response = requests.get(f'https://api.scryfall.com/decks/{key}/export/text')
+            decklist = [line for line in response.text.split('\r\n') if not line.startswith('//')]
         else:
             print('Input URL must be to either to https://deckbox.org or https://tappedout.net.')
             queue.sendMessage({'type':'error', 'text':'Input URL must be either to https://deckbox.org or https://tappedout.net'})
