@@ -38,6 +38,13 @@ basics = {
             'mountain': {'name':'Mountain','set':'c16','number':'346'},
             'plains': {'name':'Plains','set':'c16','number':'337'},
             'swamp': {'name':'Swamp','set':'c16','number':'343'}
+            },
+        'unsanctioned':{
+            'forest': {'name': 'Forest','set':'und','number':'96'},
+            'island': {'name': 'Island','set':'und','number':'90'},
+            'mountain': {'name': 'Mountain','set':'und','number':'94'},
+            'plains': {'name': 'Plains','set':'und','number':'88'},
+            'swamp': {'name': 'Swamp','set':'und','number':'92'}
             }
         }
 def processDecklist(decklist, reprint=False, basicSet=None):
@@ -183,16 +190,20 @@ def generateProcessedCardEntry(cardName, reprint, basicSet=None):
     """
     # Let's handle basics separately, since they are printed in every damn set. Guru lands are best.
     global basics
+    set_ = ''
+    number_ = ''
     if cardName.lower() in ['forest','island','mountain','plains','swamp']:
         if basicSet:
-            return (basics[basicSet][cardName.lower()],[])
+            set_ = f"set:{basics[basicSet][cardName.lower()]['set']}"
+            number_ = f"number:{basics[basicSet][cardName.lower()]['number']}"
         else:
-            return (basics['guru'][cardName.lower()],[])
+            set_ = f"set:{basics['guru'][cardName.lower()]['set']}"
+            number_ = f"number:{basics['guru'][cardName.lower()]['number']}"
 
     if reprint:
-        response = scryfall.doRequest('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'"'})
+        response = scryfall.doRequest('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'" ' + set_ + ' ' + number_})
     else:
-        response = scryfall.doRequest('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'" not:reprint'})
+        response = scryfall.doRequest('https://api.scryfall.com/cards/search',{'q':'!"'+cardName+'" ' + set_ + ' ' + number_})
 
 
     if response['object'] == 'error':
@@ -256,11 +267,11 @@ def generateDraftPackLists(setName, packCount):
             rarity = cardInfo['rarity']
             if rarity == 'mythic':
                 mythics.append(cardEntry)
-            elif: rarity == 'rare':
+            elif rarity == 'rare':
                 rares.append(cardEntry)
-            elif: rarity == 'uncommon':
+            elif rarity == 'uncommon':
                 uncommons.append(cardEntry)
-            elif: rarity == 'common':
+            elif rarity == 'common':
                 commons.append(cardEntry)
 
     packIndex = 0
