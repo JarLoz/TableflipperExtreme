@@ -8,7 +8,7 @@ idna==2.6
 macholib==1.8
 olefile==0.44
 pefile==2017.11.5
-Pillow==4.3.0
+Pillow==6.2.2
 PyInstaller==3.3
 requests==2.18.4
 six==1.11.0
